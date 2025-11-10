@@ -533,7 +533,7 @@ function closeCheckout() {
 }
 
 function finalizarPedidoWhatsApp() {
-  let message = "🛍️ *Meu Pedido - Labella Woman*\\n\\n"
+  let message = "🛍️ *Meu Pedido - Labella Woman* \\n\\n"
   let total = 0
 
   cart.forEach((item, index) => {
@@ -548,7 +548,7 @@ function finalizarPedidoWhatsApp() {
     message += `   Subtotal: R$ ${subtotal.toFixed(2).replace(".", ",")}\\n\\n`
   })
 
-  message += `*Total: R$ ${total.toFixed(2).replace(".", ",")}*\\n\\n`
+  message += `*Total: R$ ${total.toFixed(2).replace(".", ",")}* \\n\\n`
   message += "Gostaria de finalizar este pedido!"
 
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
