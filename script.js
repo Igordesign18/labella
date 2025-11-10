@@ -533,22 +533,22 @@ function closeCheckout() {
 }
 
 function finalizarPedidoWhatsApp() {
-  let message = "🛍️ *Meu Pedido - Labella Woman* \\n\\n"
+  let message = "🛍️ *Meu Pedido - Labella Woman*"
   let total = 0
 
   cart.forEach((item, index) => {
     const subtotal = item.new_price * item.quantity
     total += subtotal
-    message += `${index + 1}. ${item.name}\\n`
+    message += `${index + 1}. ${item.name}`
     if (item.selectedColor) {
-      message += `   Cor: ${item.selectedColor.name}\\n`
+      message += `   Cor: ${item.selectedColor.name}`
     }
-    message += `   Quantidade: ${item.quantity}\\n`
-    message += `   Preço: R$ ${Number.parseFloat(item.new_price).toFixed(2).replace(".", ",")}\\n`
-    message += `   Subtotal: R$ ${subtotal.toFixed(2).replace(".", ",")}\\n\\n`
+    message += `   Quantidade: ${item.quantity}`
+    message += `   Preço: R$ ${Number.parseFloat(item.new_price).toFixed(2).replace(".", ",")}`
+    message += `   Subtotal: R$ ${subtotal.toFixed(2).replace(".", ",")}`
   })
 
-  message += `*Total: R$ ${total.toFixed(2).replace(".", ",")}* \\n\\n`
+  message += `*Total: R$ ${total.toFixed(2).replace(".", ",")}*`
   message += "Gostaria de finalizar este pedido!"
 
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
