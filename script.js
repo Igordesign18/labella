@@ -329,7 +329,7 @@ function displayProducts(products, container) {
     }
 
     const productUrl = `${window.location.origin}${window.location.pathname}?produto=${product.id}`
-    const whatsappMessage = encodeURIComponent(`Olá! Tenho interesse no ${product.name}\\n\\nVer produto: ${productUrl}`)
+    const whatsappMessage = encodeURIComponent(`Olá! Tenho interesse no ${product.name}\n\nVer produto: ${productUrl}`)
 
     let colorsHtml = ""
     if (productColors[product.id] && productColors[product.id].length > 0) {
@@ -553,7 +553,7 @@ function finalizarPedidoWhatsApp() {
   message += `Gostaria de finalizar este pedido! 😊`
 
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
-  const whatsappClean = whatsapp.replace(/\\D/g, "")
+  const whatsappClean = whatsapp.replace(/\D/g, "")
   const encodedMessage = encodeURIComponent(message)
 
   window.open(`https://wa.me/${whatsappClean}?text=${encodedMessage}`, "_blank")
@@ -569,10 +569,10 @@ function finalizarPedidoWhatsApp() {
 
 function shareProduct(product) {
   const productUrl = `${window.location.origin}${window.location.pathname}?produto=${product.id}`
-  const shareMessage = `Estou compartilhando esse produto da Labella Woman com 10% de desconto!\\n\\n${product.name}\\n\\n${productUrl}`
+  const shareMessage = `Estou compartilhando esse produto da Labella Woman com 10% de desconto!\n\n${product.name}\n\n${productUrl}`
 
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
-  const whatsappClean = whatsapp.replace(/\\D/g, "")
+  const whatsappClean = whatsapp.replace(/\D/g, "")
   const encodedMessage = encodeURIComponent(shareMessage)
 
   window.open(`https://wa.me/${whatsappClean}?text=${encodedMessage}`, "_blank")
@@ -582,7 +582,7 @@ function shareProduct(product) {
 
 function openWhatsApp() {
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
-  const whatsappClean = whatsapp.replace(/\\D/g, "")
+  const whatsappClean = whatsapp.replace(/\D/g, "")
   const message = encodeURIComponent("Olá! Gostaria de saber mais sobre os produtos da Labella Woman.")
   window.open(`https://wa.me/${whatsappClean}?text=${message}`, "_blank")
 }
