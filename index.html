@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labella Woman - Moda Feminina Exclusiva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="promo-banner scroll-reveal" id="promoBanner">
+        FRETE GRÁTIS EM COMPRAS ACIMA DE R$299!
+        <button class="close-btn" onclick="this.parentElement.style.display='none'">×</button>
+    </div>
+
+    <header class="scroll-reveal">
+        <nav>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i data-lucide="menu" id="menuIcon"></i>
+            </button>
+            <div class="logo">LABELLA WOMAN</div>
+            <ul class="nav-links" id="navCategories">
+                <!-- Categorias serão carregadas aqui dinamicamente -->
+            </ul>
+            <div class="nav-icons">
+                <button class="icon-btn"><i data-lucide="user"></i></button>
+                <button class="icon-btn cart-count" onclick="openCart()">
+                    <i data-lucide="shopping-bag"></i>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+            </div>
+        </nav>
+
+        <section class="hero scroll-reveal" id="heroSection">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>
+                        <span class="white" id="heroTitle1">COLEÇÃO</span><br>
+                        <span class="pink" id="heroTitle2">EXCLUSIVA</span>
+                    </h1>
+                    <p class="subtitle" id="heroSubtitle">Tudo com até 70% OFF!</p>
+                    <button class="cta-button" id="heroButton" onclick="document.getElementById('novidades').scrollIntoView({behavior: 'smooth'})">Comprar Agora</button>
+                </div>
+                <div class="hero-image">
+                    <img id="heroImage" src="/images/LabellaWoman.jpg" alt="Modelo Labella Woman">
+                </div>
+            </div>
+        </section>
+    </header>
+
+    <section class="products scroll-reveal" id="novidades">
+        <h2 class="section-title scroll-reveal">Nossas Peças em Destaque</h2>
+        <div id="productsContainer" class="scroll-reveal">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 20px;">Carregando produtos...</p>
+            </div>
+        </div>
+        
+        <!-- Botões de Categorias -->
+        <div class="category-filters scroll-reveal" id="categoryFilters">
+            <button class="category-btn active" data-category="promocoes">Promoções</button>
+            <button class="category-btn" data-category="all">Todos</button>
+        </div>
+    </section>
+
+    <section class="features scroll-reveal">
+        <h2 class="section-title scroll-reveal">Por Que Escolher Labella Woman?</h2>
+        <div class="features-grid">
+            <div class="feature-item scroll-reveal">
+                <i data-lucide="truck" class="feature-icon"></i>
+                <h3>Frete Grátis</h3>
+                <p>Em compras acima de R$299 para todo o Brasil</p>
+            </div>
+            <div class="feature-item scroll-reveal">
+                <i data-lucide="credit-card" class="feature-icon"></i>
+                <h3>Parcelamento</h3>
+                <p>Até 10x sem juros no cartão de crédito</p>
+            </div>
+            <div class="feature-item scroll-reveal">
+                <i data-lucide="repeat" class="feature-icon"></i>
+                <h3>Troca Grátis</h3>
+                <p>Primeira troca grátis em até 30 dias</p>
+            </div>
+            <div class="feature-item scroll-reveal">
+                <i data-lucide="sparkles" class="feature-icon"></i>
+                <h3>Qualidade Premium</h3>
+                <p>Peças exclusivas e de alta qualidade</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="newsletter scroll-reveal">
+        <h2>Receba Nossas Novidades</h2>
+        <p>Cadastre-se e ganhe 15% de desconto na primeira compra!</p>
+        <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Obrigada por se cadastrar!');">
+            <input type="email" class="newsletter-input" placeholder="Seu melhor e-mail" required>
+            <input type="tel" class="newsletter-input" placeholder="Seu WhatsApp" value="+55 " required>
+            <button type="submit" class="newsletter-button">Cadastrar</button>
+        </form>
+    </section>
+
+    <footer class="footer scroll-reveal">
+        <div class="footer-content">
+            <div class="footer-section scroll-reveal">
+                <h3>Sobre Nós</h3>
+                <p>A Labella Woman é uma marca dedicada a mulheres que buscam elegância, conforto e estilo em cada peça.</p>
+                <div class="social-icons" id="socialIcons">
+                    <div class="social-icon" onclick="window.open('https://facebook.com', '_blank')">
+                        <i data-lucide="facebook"></i>
+                    </div>
+                    <div class="social-icon" onclick="window.open('https://instagram.com', '_blank')">
+                        <i data-lucide="instagram"></i>
+                    </div>
+                    <div class="social-icon" onclick="window.open('https://pinterest.com', '_blank')">
+                        <i data-lucide="pinterest"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-section scroll-reveal">
+                <h3>Atendimento</h3>
+                <ul>
+                    <li><a href="#">Contato</a></li>
+                    <li><a href="#">Dúvidas Frequentes</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                </ul>
+            </div>
+            <div class="footer-section scroll-reveal">
+                <h3>Institucional</h3>
+                <ul>
+                    <li><a href="#">Sobre a Labella</a></li>
+                    <li><a href="#">Trabalhe Conosco</a></li>
+                    <li><a href="#">Lojas Físicas</a></li>
+                    <li><a href="#">Seja um Revendedor</a></li>
+                </ul>
+            </div>
+            <div class="footer-section scroll-reveal">
+                <h3>Contato</h3>
+                <ul id="footerContact">
+                    <li class="footer-contact-item">
+                        <i data-lucide="mail"></i>
+                        <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bcdfd3d2c8ddc8d3fcd0ddded9d0d0ddcbd3d1ddd292dfd3d192dece">[email&#160;protected]</a></span>
+                    </li>
+                    <li class="footer-contact-item">
+                        <i data-lucide="phone"></i>
+                        <span>(11) 99999-9999</span>
+                    </li>
+                    <li class="footer-contact-item">
+                        <i data-lucide="clock"></i>
+                        <span>Seg a Sex: 9h às 18h</span>
+                    </li>
+                    <li class="footer-contact-item">
+                        <i data-lucide="map-pin"></i>
+                        <span>São Paulo, SP</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Labella Woman. Todos os direitos reservados. CNPJ: 00.000.000/0001-00</p>
+        </div>
+    </footer>
+
+    <div class="whatsapp-float" id="whatsappFloat" onclick="openWhatsApp()">
+        <i data-lucide="message-circle" style="width: 30px; height: 30px;"></i>
+    </div>
+
+    <!-- Modal de finalização do pedido -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Finalizar Pedido</h2>
+                <button class="modal-close" onclick="closeCheckout()">×</button>
+            </div>
+            
+            <div class="cart-items-list" id="checkoutItems">
+                <!-- Itens do carrinho serão inseridos aqui -->
+            </div>
+
+            <div class="cart-total">
+                <span class="cart-total-label">TOTAL:</span>
+                <span class="cart-total-value" id="checkoutTotal">R$ 0,00</span>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeCheckout()">Continuar Comprando</button>
+                <button class="btn-modal btn-whatsapp" onclick="finalizarPedidoWhatsApp()">
+                    <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
+                    Finalizar no WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de imagem em tela cheia -->
+    <div class="fullscreen-image-modal" id="fullscreenModal" onclick="closeFullscreen()">
+        <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
+        <img id="fullscreenImage" src="/images/Model.jpg" alt="Imagem em tela cheia">
+    </div>
+
+    <!-- Floating cart notification container -->
+    <div id="floatingCartNotification" class="floating-cart-notification">
+        <div class="floating-cart-content">
+            <div class="floating-cart-icon">
+                <i data-lucide="shopping-bag"></i>
+            </div>
+            <div class="floating-cart-info">
+                <h4 id="notificationProductName">Produto adicionado</h4>
+                <p id="notificationProductPrice">R$ 0,00</p>
+            </div>
+            <div class="floating-cart-actions">
+                <button class="floating-cart-btn" onclick="openCart()">Ver Carrinho</button>
+                <button class="floating-cart-close" onclick="closeFloatingCart()">×</button>
+            </div>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="script.js"></script>
+</body>
+</html>
