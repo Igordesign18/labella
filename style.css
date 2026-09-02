@@ -20,12 +20,16 @@
 
   --font-serif: "Fraunces", Georgia, serif;
   --font-sans: "Manrope", -apple-system, sans-serif;
+
+  /* Cor usada para preços, ícones e links em destaque sobre o fundo da
+     página. Em temas com cor primária escura (ex: presets "Temas Escuros"),
+     isso evitaria texto escuro sobre fundo escuro — por isso no modo escuro
+     ela passa a usar a cor secundária (sempre mais clara nesses presets). */
+  --accent-text: var(--color-primary);
 }
 
-/* Modo escuro — ativado via classe "theme-dark" no <body>, controlada pelo
-   painel (aba Cores & Design > Temas Escuros). Sobrescreve só a paleta de
-   fundo/texto; --color-primary/secondary/cta continuam vindo do painel. */
 body.theme-dark {
+  --accent-text: var(--color-secondary);
   --ink: #f3ede4;
   --ink-soft: #cabfb2;
   --cream: #15110e;
@@ -194,7 +198,7 @@ nav.nav-scrolled {
 }
 
 .nav-links a:hover {
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .nav-links a:hover::after {
@@ -250,7 +254,7 @@ nav.nav-scrolled {
 .category-btn.active {
   background: transparent;
   color: var(--ink);
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: var(--accent-text);
 }
 
 .nav-icons {
@@ -270,7 +274,7 @@ nav.nav-scrolled {
 }
 
 .icon-btn:hover {
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .cart-count {
@@ -742,7 +746,7 @@ body.loaded .hero-text .cta-button {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .product-colors {
@@ -922,7 +926,7 @@ body.loaded .hero-text .cta-button {
 
 .feature-icon {
   margin: 0 0 22px;
-  color: var(--color-primary);
+  color: var(--accent-text);
   width: 30px;
   height: 30px;
   stroke-width: 1.4px;
@@ -1238,7 +1242,7 @@ body.loaded .hero-text .cta-button {
 
 .cart-item-price {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--accent-text);
   min-width: 80px;
   text-align: right;
   font-family: var(--font-serif);
@@ -1255,7 +1259,7 @@ body.loaded .hero-text .cta-button {
 }
 
 .cart-item-remove:hover {
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .cart-total {
@@ -1280,7 +1284,7 @@ body.loaded .hero-text .cta-button {
   font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .modal-actions {
@@ -1450,7 +1454,7 @@ body.loaded .hero-text .cta-button {
   font-family: var(--font-serif);
   font-size: 15px;
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--accent-text);
 }
 
 .floating-cart-actions {
