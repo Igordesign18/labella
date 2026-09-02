@@ -220,41 +220,44 @@ nav.nav-scrolled {
   display: flex;
 }
 
-/* Category filters (abas sublinhadas, não pills) */
+/* Category filters (pills destacadas) */
 .category-filters {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   margin-top: 3rem;
   flex-wrap: wrap;
-  padding: 0 1rem;
+  padding: 0 1rem 1.5rem;
   border-bottom: 1px solid var(--line);
 }
 
 .category-btn {
-  padding: 0.6rem 1.1rem;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
+  padding: 0.7rem 1.5rem;
+  border: 1.5px solid var(--line);
+  background: var(--white);
   color: var(--ink-soft);
-  border-radius: 0;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--font-sans);
-  transition: color 0.25s, border-color 0.25s;
+  transition: color 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.2s;
   font-size: 14px;
-  margin-bottom: -1px;
+  letter-spacing: 0.02em;
 }
 
 .category-btn:hover {
-  color: var(--ink);
-  border-bottom-color: var(--line);
+  color: var(--white);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .category-btn.active {
-  background: transparent;
-  color: var(--ink);
-  border-bottom-color: var(--accent-text);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--white);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .nav-icons {
