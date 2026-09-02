@@ -1,9 +1,3 @@
-const SUPABASE_URL = "https://boqhqpawylckzjoskgcp.supabase.co"
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJvcWhxcGF3eWxja3pqb3NrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MzU4NTcsImV4cCI6MjA3ODExMTg1N30.LzHa6t8OtlYVDKB7ncHCNkpNQnt6JKMLmY9aXpMQDV4"
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
 let cart = []
 let siteConfig = {}
 const productColors = {}
@@ -64,13 +58,9 @@ function initProductScrollReveal() {
 
 async function loadCategories() {
   try {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("visible", true)
-      .order("position", { ascending: true })
-
-    if (error && error.code !== "PGRST116") throw error
+    const response = await fetch("/api/categories")
+    if (!response.ok) throw new Error("Erro ao carregar categorias")
+    const data = await response.json()
 
     if (data && data.length > 0) {
       categories = data
@@ -116,9 +106,9 @@ async function loadCategories() {
 
 async function loadSiteColorsAndConfig() {
   try {
-    const { data, error } = await supabase.from("site_config").select("*").single()
-
-    if (error && error.code !== "PGRST116") throw error
+    const response = await fetch("/api/site-config")
+    if (!response.ok) throw new Error("Erro ao carregar configurações")
+    const data = await response.json()
 
     if (data) {
       siteConfig = data
@@ -208,9 +198,9 @@ function updateSocialIcons(data) {
 
 async function loadProductColors() {
   try {
-    const { data, error } = await supabase.from("product_colors").select("*")
-
-    if (error && error.code !== "PGRST116") throw error
+    const response = await fetch("/api/product-colors")
+    if (!response.ok) throw new Error("Erro ao carregar cores")
+    const data = await response.json()
 
     if (data) {
       data.forEach((row) => {
@@ -233,9 +223,9 @@ async function loadProducts() {
   const container = document.getElementById("productsContainer")
 
   try {
-    const { data: products, error } = await supabase.from("products").select("*").order("position", { ascending: true })
-
-    if (error) throw error
+    const response = await fetch("/api/products")
+    if (!response.ok) throw new Error("Erro ao carregar produtos")
+    const products = await response.json()
 
     if (!products || products.length === 0) {
       container.innerHTML = `
