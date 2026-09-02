@@ -922,11 +922,34 @@
                     <div onclick="applyPalette('#7f00ff', '#e100ff', '#c600d6')" style="background: linear-gradient(135deg, #7f00ff 0%, #e100ff 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
                         Roxo Real
                     </div>
-                    <div onclick="applyPalette('#ff6a00', '#ee0979', #d4004e')" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                    <div onclick="applyPalette('#ff6a00', '#ee0979', '#d4004e')" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
                         Laranja Pôr do Sol
                     </div>
                     <div onclick="applyPalette('#11998e', '#38ef7d', '#2dd46d')" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
                         Verde Esmeralda
+                    </div>
+                </div>
+
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #666;">
+                    <i data-lucide="moon" style="width: 18px; height: 18px;"></i>
+                    Temas Escuros Premium
+                </h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 40px;">
+                    <div onclick="applyPalette('#1a1a1a', '#c9a227', '#0d0d0d')" style="background: linear-gradient(135deg, #1a1a1a 0%, #c9a227 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                        Preto &amp; Dourado
+                    </div>
+                    <div onclick="applyPalette('#101f3c', '#c2a878', '#0a1428')" style="background: linear-gradient(135deg, #101f3c 0%, #c2a878 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                        Azul Meia-Noite
+                    </div>
+                    <div onclick="applyPalette('#3d0d1a', '#d9a5a0', '#2a0812')" style="background: linear-gradient(135deg, #3d0d1a 0%, #d9a5a0 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                        Vinho Profundo
+                    </div>
+                    <div onclick="applyPalette('#0b3d2e', '#c9a875', '#072920')" style="background: linear-gradient(135deg, #0b3d2e 0%, #c9a875 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                        Esmeralda Noturna
+                    </div>
+                    <div onclick="applyPalette('#2b2b2b', '#b87333', '#1a1a1a')" style="background: linear-gradient(135deg, #2b2b2b 0%, #b87333 100%); padding: 30px; border-radius: 10px; cursor: pointer; text-align: center; color: white; font-weight: 700; transition: transform 0.2s;">
+                        Grafite &amp; Bronze
                     </div>
                 </div>
 
@@ -1669,6 +1692,7 @@
             document.getElementById('colorSecondaryHex').value = secondary;
             document.getElementById('colorCTA').value = cta;
             document.getElementById('colorCTAHex').value = cta;
+            previewSetColors();
         }
 
         // Color input sync
