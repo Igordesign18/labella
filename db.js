@@ -70,10 +70,30 @@ CREATE TABLE IF NOT EXISTS site_config (
 );
 `);
 
-// Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo)
+// Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo).
 const configRow = db.prepare('SELECT id FROM site_config LIMIT 1').get();
 if (!configRow) {
     db.prepare('INSERT INTO site_config (store_name) VALUES (?)').run('Labella Woman');
 }
+
+// Preenche o hero e o banner com o texto que já está publicado no site (index.html),
+// mas só nos campos que ainda estiverem vazios — nunca sobrescreve o que você já
+// tiver editado pelo painel. Roda toda vez que o servidor sobe; depois da primeira
+// vez que você salvar algo nesses campos, isso deixa de ter efeito.
+db.prepare(`
+    UPDATE site_config SET
+        promo_banner  = COALESCE(promo_banner, ?),
+        hero_title_1  = COALESCE(hero_title_1, ?),
+        hero_title_2  = COALESCE(hero_title_2, ?),
+        hero_subtitle = COALESCE(hero_subtitle, ?),
+        hero_button   = COALESCE(hero_button, ?)
+    WHERE id = (SELECT id FROM site_config LIMIT 1)
+`).run(
+    'Frete grátis em compras acima de R$299',
+    'Coleção',
+    'Atemporal',
+    'Peças exclusivas, feitas para durar além de uma estação.',
+    'Ver coleção'
+);
 
 module.exports = { db, DATA_DIR, UPLOADS_DIR };

@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Labella Woman - Moda Feminina Exclusiva</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <title>Labella Woman | Moda Feminina Atemporal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="promo-banner scroll-reveal" id="promoBanner">
-        FRETE GRÁTIS EM COMPRAS ACIMA DE R$299!
+        Frete grátis em compras acima de R$299
         <button class="close-btn" onclick="this.parentElement.style.display='none'">×</button>
     </div>
 
@@ -19,7 +19,7 @@
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
                 <i data-lucide="menu" id="menuIcon"></i>
             </button>
-            <div class="logo">LABELLA WOMAN</div>
+            <div class="logo">Labella Woman</div>
             <ul class="nav-links" id="navCategories">
                 <!-- Categorias serão carregadas aqui dinamicamente -->
             </ul>
@@ -36,11 +36,11 @@
             <div class="hero-content">
                 <div class="hero-text">
                     <h1>
-                        <span class="white" id="heroTitle1">COLEÇÃO</span><br>
-                        <span class="pink" id="heroTitle2">EXCLUSIVA</span>
+                        <span class="white" id="heroTitle1">Coleção</span><br>
+                        <span class="pink" id="heroTitle2">Atemporal</span>
                     </h1>
-                    <p class="subtitle" id="heroSubtitle">Tudo com até 70% OFF!</p>
-                    <button class="cta-button" id="heroButton" onclick="document.getElementById('novidades').scrollIntoView({behavior: 'smooth'})">Comprar Agora</button>
+                    <p class="subtitle" id="heroSubtitle">Peças exclusivas, feitas para durar além de uma estação.</p>
+                    <button class="cta-button" id="heroButton" onclick="document.getElementById('novidades').scrollIntoView({behavior: 'smooth'})">Ver coleção</button>
                 </div>
                 <div class="hero-image">
                     <img id="heroImage" src="/images/LabellaWoman.jpg" alt="Modelo Labella Woman">
@@ -50,7 +50,7 @@
     </header>
 
     <section class="products scroll-reveal" id="novidades">
-        <h2 class="section-title scroll-reveal">Nossas Peças em Destaque</h2>
+        <h2 class="section-title scroll-reveal">Peças em destaque</h2>
         <div id="productsContainer" class="scroll-reveal">
             <div class="loading-state">
                 <div class="loading-spinner"></div>
@@ -66,34 +66,34 @@
     </section>
 
     <section class="features scroll-reveal">
-        <h2 class="section-title scroll-reveal">Por Que Escolher Labella Woman?</h2>
+        <h2 class="section-title scroll-reveal">Por que vestir Labella Woman</h2>
         <div class="features-grid">
             <div class="feature-item scroll-reveal">
                 <i data-lucide="truck" class="feature-icon"></i>
-                <h3>Frete Grátis</h3>
+                <h3>Frete grátis</h3>
                 <p>Em compras acima de R$299 para todo o Brasil</p>
             </div>
             <div class="feature-item scroll-reveal">
                 <i data-lucide="credit-card" class="feature-icon"></i>
                 <h3>Parcelamento</h3>
-                <p>Até 10x sem juros no cartão de crédito</p>
+                <p>Em até 10x sem juros no cartão de crédito</p>
             </div>
             <div class="feature-item scroll-reveal">
                 <i data-lucide="repeat" class="feature-icon"></i>
-                <h3>Troca Grátis</h3>
+                <h3>Troca facilitada</h3>
                 <p>Primeira troca grátis em até 30 dias</p>
             </div>
             <div class="feature-item scroll-reveal">
                 <i data-lucide="sparkles" class="feature-icon"></i>
-                <h3>Qualidade Premium</h3>
-                <p>Peças exclusivas e de alta qualidade</p>
+                <h3>Qualidade premium</h3>
+                <p>Peças exclusivas, pensadas para durar</p>
             </div>
         </div>
     </section>
 
     <section class="newsletter scroll-reveal">
-        <h2>Receba Nossas Novidades</h2>
-        <p>Cadastre-se e ganhe 15% de desconto na primeira compra!</p>
+        <h2>Receba nossas novidades</h2>
+        <p>Cadastre-se e ganhe 15% de desconto na primeira compra</p>
         <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Obrigada por se cadastrar!');">
             <input type="email" class="newsletter-input" placeholder="Seu melhor e-mail" required>
             <input type="tel" class="newsletter-input" placeholder="Seu WhatsApp" value="+55 " required>

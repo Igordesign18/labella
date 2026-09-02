@@ -31,9 +31,139 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1700px;
             margin: 40px auto;
             padding: 0 20px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 400px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .editor-column {
+            min-width: 0;
+        }
+
+        .preview-column {
+            position: sticky;
+            top: 20px;
+        }
+
+        .preview-frame-wrap {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 10px 10px 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .preview-frame-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px 10px;
+            color: white;
+        }
+
+        .preview-frame-header span {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preview-frame-header .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            display: inline-block;
+            animation: livePulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .preview-frame-header button {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .preview-frame-header button:hover {
+            background: rgba(255,255,255,0.28);
+        }
+
+        .preview-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 4999;
+        }
+
+        .preview-frame-wrap.expanded {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-backdrop.active {
+            display: block;
+        }
+
+        .preview-frame-wrap.expanded .preview-frame-body {
+            flex: 1;
+            height: auto;
+        }
+
+        .preview-frame-wrap.expanded .preview-frame-body iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview-frame-body {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            height: 780px;
+        }
+
+        .preview-frame-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 1180px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-column {
+                position: static;
+                order: -1;
+            }
+
+            .preview-frame-body {
+                height: 480px;
+            }
         }
 
         .tabs {
@@ -676,6 +806,7 @@
         </div>
 
     <div class="container">
+      <div class="editor-column">
         <div class="tabs">
             <button class="tab active" onclick="switchTab('geral')">
                 <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
@@ -1013,6 +1144,31 @@
                 </form>
             </div>
         </div>
+      </div>
+      <!-- Fim da coluna do editor -->
+
+      <div class="preview-column">
+        <div class="preview-backdrop" id="previewBackdrop" onclick="toggleExpandPreview()"></div>
+        <div class="preview-frame-wrap" id="previewFrameWrap">
+            <div class="preview-frame-header">
+                <span><span class="live-dot"></span> Preview ao vivo</span>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" onclick="reloadPreview()" title="Recarregar preview">
+                        <i data-lucide="refresh-cw" style="width: 15px; height: 15px;"></i>
+                    </button>
+                    <button type="button" onclick="toggleExpandPreview()" title="Expandir (visão desktop)" id="expandPreviewBtn">
+                        <i data-lucide="maximize-2" id="expandPreviewIcon" style="width: 15px; height: 15px;"></i>
+                    </button>
+                    <button type="button" onclick="window.open('/', '_blank')" title="Abrir o site em outra aba">
+                        <i data-lucide="external-link" style="width: 15px; height: 15px;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-frame-body">
+                <iframe id="livePreviewFrame" src="/" title="Preview do site"></iframe>
+            </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal de Produto -->
@@ -1161,10 +1317,139 @@
             return response.json();
         }
 
+        // ===================== Preview ao vivo =====================
+        // O iframe carrega o site de verdade (mesma origem), então conseguimos
+        // ler/escrever direto no DOM dele e até chamar as funções que o
+        // próprio script.js do site expõe (updateFooterContact, updateSocialIcons),
+        // pra não duplicar a lógica de exibição em dois lugares.
+
+        function getPreviewWindow() {
+            const frame = document.getElementById('livePreviewFrame');
+            try {
+                return frame && frame.contentWindow;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getPreviewDoc() {
+            const win = getPreviewWindow();
+            try {
+                return win && win.document;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function reloadPreview() {
+            const frame = document.getElementById('livePreviewFrame');
+            if (!frame) return;
+            try {
+                frame.contentWindow.location.reload();
+            } catch (e) {
+                frame.src = frame.src;
+            }
+        }
+
+        function toggleExpandPreview() {
+            const wrap = document.getElementById('previewFrameWrap');
+            const backdrop = document.getElementById('previewBackdrop');
+            const btnIcon = document.getElementById('expandPreviewIcon');
+            const expanding = !wrap.classList.contains('expanded');
+
+            wrap.classList.toggle('expanded', expanding);
+            backdrop.classList.toggle('active', expanding);
+            document.body.style.overflow = expanding ? 'hidden' : '';
+
+            if (btnIcon) {
+                btnIcon.setAttribute('data-lucide', expanding ? 'minimize-2' : 'maximize-2');
+                lucide.createIcons();
+            }
+        }
+
+        function previewSetText(elementId, value) {
+            if (!value) return; // não sobrescreve o texto padrão do site com campo ainda vazio
+            const doc = getPreviewDoc();
+            const el = doc && doc.getElementById(elementId);
+            if (el) el.textContent = value;
+        }
+
+        function previewSetImageSrc(elementId, src) {
+            if (!src) return;
+            const doc = getPreviewDoc();
+            const el = doc && doc.getElementById(elementId);
+            if (el) el.src = src;
+        }
+
+        function previewSetPromoBanner(value) {
+            if (!value) return;
+            const doc = getPreviewDoc();
+            const el = doc && doc.getElementById('promoBanner');
+            if (el && el.firstChild) el.firstChild.textContent = value + ' ';
+        }
+
+        function previewSetColors() {
+            const doc = getPreviewDoc();
+            if (!doc) return;
+            const root = doc.documentElement;
+            const primary = document.getElementById('colorPrimary')?.value;
+            const secondary = document.getElementById('colorSecondary')?.value;
+            const cta = document.getElementById('colorCTA')?.value;
+            if (primary) root.style.setProperty('--color-primary', primary);
+            if (secondary) root.style.setProperty('--color-secondary', secondary);
+            if (cta) root.style.setProperty('--color-cta', cta);
+        }
+
+        function previewUpdateContato() {
+            const win = getPreviewWindow();
+            if (!win || typeof win.updateFooterContact !== 'function') return;
+            win.updateFooterContact({
+                email: document.getElementById('email')?.value,
+                phone: document.getElementById('phone')?.value,
+                working_hours: document.getElementById('workingHours')?.value,
+                city: document.getElementById('city')?.value,
+                state: document.getElementById('state')?.value
+            });
+        }
+
+        function previewUpdateRedes() {
+            const win = getPreviewWindow();
+            if (!win || typeof win.updateSocialIcons !== 'function') return;
+            win.updateSocialIcons({
+                facebook: document.getElementById('facebook')?.value,
+                instagram: document.getElementById('instagram')?.value,
+                pinterest: document.getElementById('pinterest')?.value
+            });
+        }
+
+        function previewUpdateHero() {
+            previewSetText('heroTitle1', document.getElementById('heroTitle1')?.value);
+            previewSetText('heroTitle2', document.getElementById('heroTitle2')?.value);
+            previewSetText('heroSubtitle', document.getElementById('heroSubtitle')?.value);
+            previewSetText('heroButton', document.getElementById('heroButton')?.value);
+            if (currentHeroImageUrl) previewSetImageSrc('heroImage', currentHeroImageUrl);
+        }
+
+        function previewUpdateGeral() {
+            previewSetPromoBanner(document.getElementById('promoBanner')?.value);
+        }
+
+        // Reaplica tudo que já está nos campos do painel assim que o preview termina
+        // de carregar (cobre o load inicial e todo reloadPreview()).
+        function pushCurrentFormStateToPreview() {
+            previewUpdateGeral();
+            previewUpdateHero();
+            previewSetColors();
+            previewUpdateContato();
+            previewUpdateRedes();
+        }
+
+
+            
         // Check authentication on page load
         async function checkAuth() {
             const isLoggedIn = localStorage.getItem('adminLoggedIn');
-            
+
             if (isLoggedIn === 'true') {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
@@ -1277,6 +1562,22 @@
                     }
                 });
             }
+
+            // Preview ao vivo: liga cada campo relevante ao iframe do site
+            ['colorPrimary', 'colorPrimaryHex', 'colorSecondary', 'colorSecondaryHex', 'colorCTA', 'colorCTAHex'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', previewSetColors);
+            });
+            ['heroTitle1', 'heroTitle2', 'heroSubtitle', 'heroButton'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', previewUpdateHero);
+            });
+            document.getElementById('promoBanner')?.addEventListener('input', previewUpdateGeral);
+            ['whatsapp', 'phone', 'email', 'city', 'state', 'workingHours'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', previewUpdateContato);
+            });
+            ['facebook', 'instagram', 'pinterest'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', previewUpdateRedes);
+            });
+            document.getElementById('livePreviewFrame')?.addEventListener('load', pushCurrentFormStateToPreview);
 
             initConfig();
             loadCategories();
@@ -1394,6 +1695,7 @@
                 setTimeout(() => alertDiv.innerHTML = '', 3000);
 
                 loadCategories();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao excluir: ' + error.message);
             }
@@ -1424,6 +1726,7 @@
 
                 closeCategoryModal();
                 loadCategories();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao salvar: ' + error.message);
             }
@@ -1443,6 +1746,7 @@
                 await apiFetch(`/api/admin/categories/${previous.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
 
                 loadCategories();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao reordenar: ' + error.message);
             }
@@ -1462,6 +1766,7 @@
                 await apiFetch(`/api/admin/categories/${next.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
 
                 loadCategories();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao reordenar: ' + error.message);
             }
@@ -1536,6 +1841,7 @@
                 await apiFetch(`/api/admin/products/${previous.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
 
                 loadProductsForReordering();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao reordenar: ' + error.message);
             }
@@ -1556,6 +1862,7 @@
                 await apiFetch(`/api/admin/products/${next.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
 
                 loadProductsForReordering();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao reordenar: ' + error.message);
             }
@@ -1686,6 +1993,7 @@
                 document.getElementById('heroImagePreviewImg').src = url;
                 document.getElementById('heroImagePreview').style.display = 'block';
                 container.style.display = 'none';
+                previewUpdateHero();
 
             } catch (error) {
                 alert('Erro ao enviar imagem: ' + error.message);
@@ -1749,6 +2057,8 @@
             } catch (error) {
                 console.error('Erro ao carregar configurações:', error);
             }
+
+            pushCurrentFormStateToPreview();
         }
 
         async function saveGeral(e) {
@@ -1975,6 +2285,7 @@
 
                 alert('Produto excluído com sucesso!');
                 loadProducts();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao excluir: ' + error.message);
             }
@@ -2016,6 +2327,7 @@
                 alert(currentEditId ? 'Produto atualizado!' : 'Produto adicionado!');
                 closeModal();
                 loadProducts();
+                reloadPreview();
             } catch (error) {
                 alert('Erro ao salvar: ' + error.message);
             }
