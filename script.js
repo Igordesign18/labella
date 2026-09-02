@@ -123,6 +123,11 @@ async function loadSiteColorsAndConfig() {
         document.documentElement.style.setProperty("--color-cta", data.color_cta)
       }
 
+      if (data.store_name) {
+        document.getElementById("siteLogo").textContent = data.store_name
+        document.title = `${data.store_name} | Moda Feminina Atemporal`
+      }
+
       if (data.promo_banner) {
         document.getElementById("promoBanner").firstChild.textContent = data.promo_banner + " "
       }
@@ -132,6 +137,19 @@ async function loadSiteColorsAndConfig() {
       if (data.hero_subtitle) document.getElementById("heroSubtitle").textContent = data.hero_subtitle
       if (data.hero_button) document.getElementById("heroButton").textContent = data.hero_button
       if (data.hero_image) document.getElementById("heroImage").src = data.hero_image
+
+      const videoSection = document.getElementById("featureVideoSection")
+      if (videoSection) {
+        if (data.feature_video_url) {
+          document.getElementById("featureVideoPlayer").src = data.feature_video_url
+          if (data.feature_video_title) {
+            document.getElementById("featureVideoTitle").textContent = data.feature_video_title
+          }
+          videoSection.style.display = ""
+        } else {
+          videoSection.style.display = "none"
+        }
+      }
 
       updateFooterContact(data)
       updateSocialIcons(data)
@@ -345,6 +363,7 @@ function displayProducts(products, container) {
                 <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
+                ${product.video_url ? `<button type="button" class="video-badge" onclick="event.stopPropagation(); openProductVideo('${product.video_url}')" title="Assistir vídeo"><i data-lucide="play" style="width: 16px; height: 16px;"></i></button>` : ""}
             </div>
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
@@ -579,12 +598,39 @@ function openWhatsApp() {
 
 function openFullscreen(imageUrl) {
   event.stopPropagation()
-  document.getElementById("fullscreenImage").src = imageUrl
+  const video = document.getElementById("fullscreenVideo")
+  video.pause()
+  video.style.display = "none"
+  video.src = ""
+
+  const img = document.getElementById("fullscreenImage")
+  img.style.display = "block"
+  img.src = imageUrl
+
+  document.getElementById("fullscreenModal").classList.add("active")
+}
+
+function openProductVideo(videoUrl) {
+  if (event) event.stopPropagation()
+
+  document.getElementById("fullscreenImage").style.display = "none"
+
+  const video = document.getElementById("fullscreenVideo")
+  video.style.display = "block"
+  video.src = videoUrl
+  video.currentTime = 0
+  video.play().catch(() => {})
+
   document.getElementById("fullscreenModal").classList.add("active")
 }
 
 function closeFullscreen() {
   document.getElementById("fullscreenModal").classList.remove("active")
+
+  const video = document.getElementById("fullscreenVideo")
+  video.pause()
+  video.style.display = "none"
+  document.getElementById("fullscreenImage").style.display = "block"
 }
 
 function showNotification(message) {
@@ -627,14 +673,133 @@ function showNotification(message) {
   }, 3000)
 }
 
+// ===================== Carrossel de banners =====================
+let carouselBanners = []
+let carouselIndex = 0
+let carouselTimer = null
+
+async function loadBanners() {
+  try {
+    const response = await fetch("/api/banners")
+    if (!response.ok) throw new Error("Erro ao carregar banners")
+    carouselBanners = (await response.json()) || []
+    renderCarousel()
+  } catch (error) {
+    console.error("Erro ao carregar banners:", error)
+  }
+}
+
+function renderCarousel() {
+  const section = document.getElementById("bannerCarouselSection")
+  const track = document.getElementById("carouselTrack")
+  const dotsContainer = document.getElementById("carouselDots")
+  if (!section || !track || !dotsContainer) return
+
+  if (!carouselBanners.length) {
+    section.style.display = "none"
+    stopCarouselAutoplay()
+    return
+  }
+
+  section.style.display = ""
+  track.innerHTML = ""
+  dotsContainer.innerHTML = ""
+
+  carouselBanners.forEach((banner, index) => {
+    const slide = document.createElement("div")
+    slide.className = "carousel-slide"
+    const imgHtml = `<img src="${banner.image_url}" alt="Banner ${index + 1}">`
+    slide.innerHTML = banner.link_url
+      ? `<a href="${banner.link_url}" target="_blank" rel="noopener">${imgHtml}</a>`
+      : imgHtml
+    track.appendChild(slide)
+
+    const dot = document.createElement("button")
+    dot.type = "button"
+    dot.className = "carousel-dot" + (index === 0 ? " active" : "")
+    dot.setAttribute("aria-label", `Ir para o banner ${index + 1}`)
+    dot.onclick = () => goToSlide(index)
+    dotsContainer.appendChild(dot)
+  })
+
+  // Com um único banner, não faz sentido mostrar setas/dots nem autoplay
+  const showControls = carouselBanners.length > 1
+  section.querySelectorAll(".carousel-arrow").forEach((arrow) => {
+    arrow.style.display = showControls ? "flex" : "none"
+  })
+  dotsContainer.style.display = showControls ? "flex" : "none"
+
+  carouselIndex = 0
+  updateCarouselPosition()
+
+  if (showControls) {
+    startCarouselAutoplay()
+  } else {
+    stopCarouselAutoplay()
+  }
+}
+
+function updateCarouselPosition() {
+  const track = document.getElementById("carouselTrack")
+  if (!track) return
+  track.style.transform = `translateX(-${carouselIndex * 100}%)`
+
+  document.querySelectorAll("#carouselDots .carousel-dot").forEach((dot, i) => {
+    dot.classList.toggle("active", i === carouselIndex)
+  })
+}
+
+function goToSlide(index) {
+  carouselIndex = index
+  updateCarouselPosition()
+  restartCarouselAutoplay()
+}
+
+function carouselNext() {
+  if (!carouselBanners.length) return
+  carouselIndex = (carouselIndex + 1) % carouselBanners.length
+  updateCarouselPosition()
+  restartCarouselAutoplay()
+}
+
+function carouselPrev() {
+  if (!carouselBanners.length) return
+  carouselIndex = (carouselIndex - 1 + carouselBanners.length) % carouselBanners.length
+  updateCarouselPosition()
+  restartCarouselAutoplay()
+}
+
+function startCarouselAutoplay() {
+  stopCarouselAutoplay()
+  carouselTimer = setInterval(carouselNext, 5000)
+}
+
+function stopCarouselAutoplay() {
+  if (carouselTimer) {
+    clearInterval(carouselTimer)
+    carouselTimer = null
+  }
+}
+
+function restartCarouselAutoplay() {
+  if (carouselBanners.length > 1) startCarouselAutoplay()
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize scroll reveal first
   initScrollReveal()
-  
+
+  const carouselViewport = document.getElementById("carouselViewport")
+  if (carouselViewport) {
+    carouselViewport.addEventListener("mouseenter", stopCarouselAutoplay)
+    carouselViewport.addEventListener("mouseleave", restartCarouselAutoplay)
+  }
+
   await loadCategories()
   loadSiteColorsAndConfig()
   await loadProductColors()
   await loadProducts()
+  loadBanners()
   lucide.createIcons()
 
   const urlParams = new URLSearchParams(window.location.search)

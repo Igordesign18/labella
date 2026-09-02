@@ -7,6 +7,9 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 
 fs.mkdirSync(path.join(UPLOADS_DIR, 'products'), { recursive: true });
 fs.mkdirSync(path.join(UPLOADS_DIR, 'hero'), { recursive: true });
+fs.mkdirSync(path.join(UPLOADS_DIR, 'banners'), { recursive: true });
+fs.mkdirSync(path.join(UPLOADS_DIR, 'videos', 'products'), { recursive: true });
+fs.mkdirSync(path.join(UPLOADS_DIR, 'videos', 'site'), { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, 'labella.db'));
 db.pragma('journal_mode = WAL');
@@ -27,6 +30,7 @@ CREATE TABLE IF NOT EXISTS products (
     name TEXT NOT NULL,
     category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
     image_url TEXT,
+    video_url TEXT,
     old_price REAL,
     new_price REAL,
     discount_percentage INTEGER DEFAULT 0,
@@ -43,6 +47,15 @@ CREATE TABLE IF NOT EXISTS product_colors (
     color_hex TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS banners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    image_url TEXT NOT NULL,
+    link_url TEXT,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS site_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_name TEXT,
@@ -54,6 +67,8 @@ CREATE TABLE IF NOT EXISTS site_config (
     hero_subtitle TEXT,
     hero_button TEXT,
     hero_image TEXT,
+    feature_video_url TEXT,
+    feature_video_title TEXT,
     color_primary TEXT,
     color_secondary TEXT,
     color_cta TEXT,
@@ -69,6 +84,20 @@ CREATE TABLE IF NOT EXISTS site_config (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `);
+
+// Migração segura: adiciona colunas novas em bancos que já existiam antes
+// desta versão (ALTER TABLE só roda se a coluna ainda não existir).
+function ensureColumn(table, column, definition) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+    const exists = columns.some((c) => c.name === column);
+    if (!exists) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    }
+}
+
+ensureColumn('products', 'video_url', 'TEXT');
+ensureColumn('site_config', 'feature_video_url', 'TEXT');
+ensureColumn('site_config', 'feature_video_title', 'TEXT');
 
 // Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo).
 const configRow = db.prepare('SELECT id FROM site_config LIMIT 1').get();

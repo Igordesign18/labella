@@ -19,7 +19,7 @@
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
                 <i data-lucide="menu" id="menuIcon"></i>
             </button>
-            <div class="logo">Labella Woman</div>
+            <div class="logo" id="siteLogo">Labella Woman</div>
             <ul class="nav-links" id="navCategories">
                 <!-- Categorias serão carregadas aqui dinamicamente -->
             </ul>
@@ -49,6 +49,19 @@
         </section>
     </header>
 
+    <section class="banner-carousel scroll-reveal" id="bannerCarouselSection" style="display: none;">
+        <div class="carousel-viewport" id="carouselViewport">
+            <div class="carousel-track" id="carouselTrack"></div>
+            <button type="button" class="carousel-arrow prev" onclick="carouselPrev()" aria-label="Banner anterior">
+                <i data-lucide="chevron-left"></i>
+            </button>
+            <button type="button" class="carousel-arrow next" onclick="carouselNext()" aria-label="Próximo banner">
+                <i data-lucide="chevron-right"></i>
+            </button>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </div>
+    </section>
+
     <section class="products scroll-reveal" id="novidades">
         <h2 class="section-title scroll-reveal">Peças em destaque</h2>
         <div id="productsContainer" class="scroll-reveal">
@@ -62,6 +75,13 @@
         <div class="category-filters scroll-reveal" id="categoryFilters">
             <button class="category-btn active" data-category="promocoes">Promoções</button>
             <button class="category-btn" data-category="all">Todos</button>
+        </div>
+    </section>
+
+    <section class="feature-video scroll-reveal" id="featureVideoSection" style="display: none;">
+        <h2 class="section-title scroll-reveal" id="featureVideoTitle">Nossa história</h2>
+        <div class="feature-video-wrap scroll-reveal">
+            <video id="featureVideoPlayer" controls playsinline preload="metadata"></video>
         </div>
     </section>
 
@@ -195,6 +215,7 @@
     <div class="fullscreen-image-modal" id="fullscreenModal" onclick="closeFullscreen()">
         <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
         <img id="fullscreenImage" src="/images/Model.jpg" alt="Imagem em tela cheia">
+        <video id="fullscreenVideo" style="display: none;" controls playsinline onclick="event.stopPropagation()"></video>
     </div>
 
     <!-- Floating cart notification container -->

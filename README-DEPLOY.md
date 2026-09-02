@@ -49,6 +49,34 @@ seu próprio servidor, dentro do volume persistente (veja abaixo).
   `painel.html` e na variável `ADMIN_KEY` do `.env`.
 - **E-mail do rodapé**: não usa mais a ofuscação da Cloudflare (só funciona
   atrás do proxy deles). Agora é um `mailto:` normal.
+- **Nome da loja**: o campo "Nome da Loja" (aba Geral) agora realmente
+  atualiza o logo do site e o título da aba do navegador — antes ficava
+  só salvo no banco, sem efeito visual.
+- **Redes sociais**: os campos de Facebook/Instagram/Pinterest (aba Redes
+  Sociais) já funcionam de ponta a ponta — o que você salva ali aparece
+  como ícone clicável no rodapé do site.
+- **Vídeos**: agora dá pra subir vídeo de até **50MB** em dois lugares:
+  - **Por produto** (aba Produtos, ao criar/editar): um selo de "play"
+    aparece sobre a foto do produto; ao clicar, abre o vídeo em tela cheia.
+  - **Vídeo em destaque do site** (nova aba "Vídeo do Site"): uma seção
+    cinematográfica entre a vitrine de produtos e os diferenciais da loja.
+    Se nenhum vídeo for enviado, a seção simplesmente não aparece.
+  Os vídeos ficam salvos em `/app/data/uploads/videos/`, dentro do mesmo
+  volume persistente das imagens.
+- **Carrossel de banners** (nova aba "Banners"): até 5 imagens horizontais,
+  exibidas em carrossel automático (troca a cada 5 segundos) entre o Hero
+  e a vitrine de produtos. Cada banner pode ter um link de destino
+  opcional. Passa o mouse por cima e o carrossel pausa; sem nenhum banner
+  cadastrado, a seção não aparece no site. Recomendo imagens bem largas
+  (proporção ~3:1, ex: 1600×500px) para não ficarem cortadas.
+
+## ⚠️ Sobre o limite de 50MB em produção
+O limite de 50MB é garantido pelo `server.js`. Mas se o EasyPanel colocar
+um proxy (Traefik) na frente do seu app, esse proxy pode ter o próprio
+limite de tamanho de upload, menor que 50MB, e rejeitar o arquivo antes
+dele chegar no servidor. Se um vídeo grande falhar ao subir em produção
+mas funcionar rodando localmente, é isso — nesse caso me avise que ajusto
+a configuração do proxy no EasyPanel.
 
 ## Passo a passo GitHub + EasyPanel
 

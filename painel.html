@@ -758,6 +758,15 @@
             gap: 8px;
         }
 
+        .banner-thumb {
+            width: 90px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             .color-controls {
                 grid-template-columns: 1fr;
@@ -819,6 +828,14 @@
             <button class="tab" onclick="switchTab('hero')">
                 <i data-lucide="layout" style="width: 18px; height: 18px;"></i>
                 Hero/Banner
+            </button>
+            <button class="tab" onclick="switchTab('video')">
+                <i data-lucide="video" style="width: 18px; height: 18px;"></i>
+                Vídeo do Site
+            </button>
+            <button class="tab" onclick="switchTab('banners')">
+                <i data-lucide="images" style="width: 18px; height: 18px;"></i>
+                Banners
             </button>
             <button class="tab" onclick="switchTab('categorias')">
                 <i data-lucide="tag" style="width: 18px; height: 18px;"></i>
@@ -1007,6 +1024,72 @@
                         Salvar Hero Section
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Aba Vídeo do Site -->
+        <div id="video" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i data-lucide="video"></i>
+                    Vídeo em Destaque
+                </h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                    Um vídeo de destaque aparece entre a vitrine de produtos e os diferenciais da loja.
+                    Se nenhum vídeo for enviado, essa seção simplesmente não aparece no site.
+                </p>
+                <div id="alertVideo"></div>
+                <form onsubmit="saveFeatureVideo(event)">
+                    <div class="form-group">
+                        <label>Título da Seção</label>
+                        <input type="text" id="featureVideoTitleInput" placeholder="Ex: Nossa história">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vídeo</label>
+                        <div class="image-upload-container" id="featureVideoUpload" onclick="document.getElementById('featureVideoInput').click()">
+                            <input type="file" id="featureVideoInput" accept="video/*" style="display: none;" onchange="handleFeatureVideoUpload(event)">
+                            <i data-lucide="video" class="upload-icon" style="width: 48px; height: 48px;"></i>
+                            <div class="upload-text">Clique para fazer upload</div>
+                            <div class="upload-hint">MP4, MOV ou WEBM até 50MB</div>
+                        </div>
+                        <div id="featureVideoPreviewBox" class="image-preview-container" style="display: none;">
+                            <video id="featureVideoPreviewPlayer" class="image-preview" controls muted style="max-height: 240px;"></video>
+                            <button type="button" class="remove-image-btn" onclick="removeFeatureVideo()">×</button>
+                        </div>
+                        <div id="featureVideoUploadStatus" style="font-size: 13px; color: #666; margin-top: 6px;"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+                        Salvar Vídeo em Destaque
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Aba Banners -->
+        <div id="banners" class="tab-content">
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 class="section-title" style="margin-bottom: 0;">
+                        <i data-lucide="images"></i>
+                        Banners (Carrossel)
+                    </h2>
+                    <button class="btn btn-primary" id="addBannerBtn" onclick="openAddBannerModal()">
+                        <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                        Adicionar Banner
+                    </button>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                    Até 5 imagens de banner horizontal, exibidas em carrossel automático (troca a cada
+                    5 segundos) no topo do site. Sem nenhum banner cadastrado, essa seção não aparece.
+                    Recomendado: imagens bem largas, tipo 1600×500px.
+                </p>
+                <div id="alertBanners"></div>
+                <div id="bannersContainer">
+                    <div style="text-align: center; padding: 40px;">Carregando...</div>
+                </div>
             </div>
         </div>
 
@@ -1205,6 +1288,21 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label>Vídeo do Produto (opcional)</label>
+                    <div class="image-upload-container" id="productVideoUpload" onclick="document.getElementById('productVideoInput').click()">
+                        <input type="file" id="productVideoInput" accept="video/*" style="display: none;" onchange="handleProductVideoUpload(event)">
+                        <i data-lucide="video" class="upload-icon" style="width: 48px; height: 48px;"></i>
+                        <div class="upload-text">Clique para fazer upload</div>
+                        <div class="upload-hint">MP4, MOV ou WEBM até 50MB</div>
+                    </div>
+                    <div id="productVideoPreview" class="image-preview-container" style="display: none;">
+                        <video id="productVideoPreviewPlayer" class="image-preview" controls muted style="max-height: 200px;"></video>
+                        <button type="button" class="remove-image-btn" onclick="removeProductVideo()">×</button>
+                    </div>
+                    <div id="productVideoUploadStatus" style="font-size: 13px; color: #666; margin-top: 6px;"></div>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Preço Antigo (R$)</label>
@@ -1282,14 +1380,51 @@
         </div>
     </div>
 
+    <!-- Modal de Banner -->
+    <div id="bannerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="bannerModalTitle">Adicionar Banner</h2>
+                <button type="button" class="close-btn" onclick="closeBannerModal()">×</button>
+            </div>
+            <form id="bannerForm" onsubmit="handleBannerSubmit(event)">
+                <div class="form-group">
+                    <label>Imagem do Banner (horizontal)</label>
+                    <div class="image-upload-container" id="bannerImageUpload" onclick="document.getElementById('bannerImageInput').click()">
+                        <input type="file" id="bannerImageInput" accept="image/*" style="display: none;" onchange="handleBannerImageUpload(event)">
+                        <i data-lucide="upload" class="upload-icon" style="width: 48px; height: 48px;"></i>
+                        <div class="upload-text">Clique para fazer upload</div>
+                        <div class="upload-hint">PNG ou JPG até 5MB — ideal em formato bem largo (ex: 1600×500)</div>
+                    </div>
+                    <div id="bannerImagePreview" class="image-preview-container" style="display: none;">
+                        <img id="bannerImagePreviewImg" class="image-preview">
+                        <button type="button" class="remove-image-btn" onclick="removeBannerImage()">×</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Link ao clicar (opcional)</label>
+                    <input type="url" id="bannerLink" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn-primary" id="bannerSubmitBtn" style="width: 100%; margin-top: 20px;">
+                    <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+                    Salvar Banner
+                </button>
+            </form>
+        </div>
+    </div>
+
     </div>
     <!-- End of adminPanel -->
 
     <script>
         let currentEditId = null;
         let currentCategoryEditId = null;
+        let currentBannerEditId = null;
         let currentProductImageUrl = null;
+        let currentProductVideoUrl = null;
+        let currentBannerImageUrl = null;
         let currentHeroImageUrl = null;
+        let currentFeatureVideoUrl = null;
         let productColorsTemp = [];
 
         // Chave de acesso ao painel (troque por uma chave forte sua).
@@ -1432,6 +1567,7 @@
 
         function previewUpdateGeral() {
             previewSetPromoBanner(document.getElementById('promoBanner')?.value);
+            previewSetText('siteLogo', document.getElementById('storeName')?.value);
         }
 
         // Reaplica tudo que já está nos campos do painel assim que o preview termina
@@ -1502,6 +1638,7 @@
             initConfig();
             loadCategories();
             loadProducts();
+            loadBanners();
             lucide.createIcons();
         }
 
@@ -1518,6 +1655,8 @@
                 loadProductsForReordering();
             } else if (tabName === 'categorias') {
                 loadCategories();
+            } else if (tabName === 'banners') {
+                loadBanners();
             }
 
             lucide.createIcons();
@@ -1571,6 +1710,7 @@
                 document.getElementById(id)?.addEventListener('input', previewUpdateHero);
             });
             document.getElementById('promoBanner')?.addEventListener('input', previewUpdateGeral);
+            document.getElementById('storeName')?.addEventListener('input', previewUpdateGeral);
             ['whatsapp', 'phone', 'email', 'city', 'state', 'workingHours'].forEach(id => {
                 document.getElementById(id)?.addEventListener('input', previewUpdateContato);
             });
@@ -1778,6 +1918,229 @@
             currentCategoryEditId = null;
         }
 
+        // ===================== Banners (carrossel) =====================
+        const MAX_BANNERS = 5;
+
+        async function loadBanners() {
+            const container = document.getElementById('bannersContainer');
+            if (!container) return;
+
+            container.innerHTML = '<div style="text-align: center; padding: 40px;">Carregando...</div>';
+
+            try {
+                const data = await apiFetch('/api/admin/banners');
+
+                const addBtn = document.getElementById('addBannerBtn');
+                if (addBtn) addBtn.style.display = data.length >= MAX_BANNERS ? 'none' : 'flex';
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum banner cadastrado</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach((banner, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'category-item';
+                    item.innerHTML = `
+                        <img src="${banner.image_url}" class="banner-thumb" alt="Banner ${index + 1}" onerror="this.src='https://via.placeholder.com/90x32?text=Banner'">
+                        <div class="category-info" style="margin-left: 15px;">
+                            <div class="category-name">Banner ${index + 1}</div>
+                            <div class="category-slug">${banner.link_url || 'Sem link'}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="reorder-buttons">
+                                <button class="reorder-btn" onclick="moveBannerUp('${banner.id}')" ${index === 0 ? 'disabled' : ''}>
+                                    <i data-lucide="arrow-up" style="width: 18px; height: 18px;"></i>
+                                </button>
+                                <button class="reorder-btn" onclick="moveBannerDown('${banner.id}')" ${index === data.length - 1 ? 'disabled' : ''}>
+                                    <i data-lucide="arrow-down" style="width: 18px; height: 18px;"></i>
+                                </button>
+                            </div>
+                            <div class="category-actions">
+                                <button class="btn btn-secondary btn-small" onclick="editBanner('${banner.id}')">
+                                    <i data-lucide="edit-2" style="width: 14px;"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteBanner('${banner.id}')">
+                                    <i data-lucide="trash-2" style="width: 14px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+                lucide.createIcons();
+            } catch (error) {
+                container.innerHTML = `<p style="text-align: center; color: #ff1744;">Erro: ${error.message}</p>`;
+            }
+        }
+
+        function openAddBannerModal() {
+            currentBannerEditId = null;
+            currentBannerImageUrl = null;
+            document.getElementById('bannerModalTitle').textContent = 'Adicionar Banner';
+            document.getElementById('bannerForm').reset();
+            document.getElementById('bannerImagePreview').style.display = 'none';
+            document.getElementById('bannerImageUpload').style.display = 'block';
+            document.getElementById('bannerModal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        async function editBanner(id) {
+            currentBannerEditId = id;
+            document.getElementById('bannerModalTitle').textContent = 'Editar Banner';
+
+            try {
+                const banners = await apiFetch('/api/admin/banners');
+                const banner = banners.find(b => String(b.id) === String(id));
+                if (!banner) throw new Error('Banner não encontrado');
+
+                document.getElementById('bannerLink').value = banner.link_url || '';
+
+                currentBannerImageUrl = banner.image_url;
+                document.getElementById('bannerImagePreviewImg').src = banner.image_url;
+                document.getElementById('bannerImagePreview').style.display = 'block';
+                document.getElementById('bannerImageUpload').style.display = 'none';
+
+                document.getElementById('bannerModal').classList.add('active');
+                lucide.createIcons();
+            } catch (error) {
+                alert('Erro ao carregar banner: ' + error.message);
+            }
+        }
+
+        function closeBannerModal() {
+            document.getElementById('bannerModal').classList.remove('active');
+            document.getElementById('bannerForm').reset();
+            removeBannerImage();
+            currentBannerEditId = null;
+        }
+
+        async function handleBannerImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Imagem muito grande! Máximo 5MB');
+                return;
+            }
+
+            const container = document.getElementById('bannerImageUpload');
+            container.style.opacity = '0.6';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const { url } = await apiFetch('/api/admin/upload?type=banner', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                currentBannerImageUrl = url;
+
+                document.getElementById('bannerImagePreviewImg').src = url;
+                document.getElementById('bannerImagePreview').style.display = 'block';
+                container.style.display = 'none';
+
+            } catch (error) {
+                alert('Erro ao enviar imagem: ' + error.message);
+                container.style.opacity = '1';
+            }
+        }
+
+        function removeBannerImage() {
+            currentBannerImageUrl = null;
+            document.getElementById('bannerImagePreview').style.display = 'none';
+            document.getElementById('bannerImageUpload').style.display = 'block';
+            document.getElementById('bannerImageInput').value = '';
+        }
+
+        async function handleBannerSubmit(e) {
+            e.preventDefault();
+
+            if (!currentBannerImageUrl) {
+                alert('Por favor, faça upload da imagem do banner!');
+                return;
+            }
+
+            const bannerData = {
+                image_url: currentBannerImageUrl,
+                link_url: document.getElementById('bannerLink').value || null
+            };
+
+            try {
+                if (currentBannerEditId) {
+                    await apiFetch(`/api/admin/banners/${currentBannerEditId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(bannerData)
+                    });
+                } else {
+                    await apiFetch('/api/admin/banners', {
+                        method: 'POST',
+                        body: JSON.stringify(bannerData)
+                    });
+                }
+
+                closeBannerModal();
+                loadBanners();
+                reloadPreview();
+            } catch (error) {
+                alert('Erro ao salvar: ' + error.message);
+            }
+        }
+
+        async function deleteBanner(id) {
+            if (!confirm('Tem certeza que deseja excluir este banner?')) return;
+
+            try {
+                await apiFetch(`/api/admin/banners/${id}`, { method: 'DELETE' });
+                loadBanners();
+                reloadPreview();
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        }
+
+        async function moveBannerUp(id) {
+            try {
+                const banners = await apiFetch('/api/admin/banners');
+                const index = banners.findIndex(b => String(b.id) === String(id));
+                if (index <= 0) return;
+
+                const current = banners[index];
+                const previous = banners[index - 1];
+
+                await apiFetch(`/api/admin/banners/${current.id}`, { method: 'PUT', body: JSON.stringify({ position: previous.position }) });
+                await apiFetch(`/api/admin/banners/${previous.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
+
+                loadBanners();
+                reloadPreview();
+            } catch (error) {
+                alert('Erro ao reordenar: ' + error.message);
+            }
+        }
+
+        async function moveBannerDown(id) {
+            try {
+                const banners = await apiFetch('/api/admin/banners');
+                const index = banners.findIndex(b => String(b.id) === String(id));
+                if (index >= banners.length - 1) return;
+
+                const current = banners[index];
+                const next = banners[index + 1];
+
+                await apiFetch(`/api/admin/banners/${current.id}`, { method: 'PUT', body: JSON.stringify({ position: next.position }) });
+                await apiFetch(`/api/admin/banners/${next.id}`, { method: 'PUT', body: JSON.stringify({ position: current.position }) });
+
+                loadBanners();
+                reloadPreview();
+            } catch (error) {
+                alert('Erro ao reordenar: ' + error.message);
+            }
+        }
+
         async function loadProductsForReordering() {
             const container = document.getElementById('productsList');
             container.innerHTML = '<div style="text-align: center; padding: 40px;">Carregando...</div>';
@@ -1967,6 +2330,50 @@
             document.getElementById('productImageInput').value = '';
         }
 
+        async function handleProductVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert('Vídeo muito grande! Máximo 50MB');
+                return;
+            }
+
+            const container = document.getElementById('productVideoUpload');
+            const statusEl = document.getElementById('productVideoUploadStatus');
+            container.style.opacity = '0.6';
+            statusEl.textContent = 'Enviando vídeo, isso pode levar um minuto...';
+
+            try {
+                const formData = new FormData();
+                formData.append('video', file);
+
+                const { url } = await apiFetch('/api/admin/upload-video?type=product', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                currentProductVideoUrl = url;
+
+                document.getElementById('productVideoPreviewPlayer').src = url;
+                document.getElementById('productVideoPreview').style.display = 'block';
+                container.style.display = 'none';
+                statusEl.textContent = '';
+
+            } catch (error) {
+                alert('Erro ao enviar vídeo: ' + error.message);
+                container.style.opacity = '1';
+                statusEl.textContent = '';
+            }
+        }
+
+        function removeProductVideo() {
+            currentProductVideoUrl = null;
+            document.getElementById('productVideoPreview').style.display = 'none';
+            document.getElementById('productVideoUpload').style.display = 'block';
+            document.getElementById('productVideoInput').value = '';
+        }
+
         async function handleHeroImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2008,6 +2415,70 @@
             document.getElementById('heroImageInput').value = '';
         }
 
+        async function handleFeatureVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert('Vídeo muito grande! Máximo 50MB');
+                return;
+            }
+
+            const container = document.getElementById('featureVideoUpload');
+            const statusEl = document.getElementById('featureVideoUploadStatus');
+            container.style.opacity = '0.6';
+            statusEl.textContent = 'Enviando vídeo, isso pode levar um minuto...';
+
+            try {
+                const formData = new FormData();
+                formData.append('video', file);
+
+                const { url } = await apiFetch('/api/admin/upload-video?type=site', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                currentFeatureVideoUrl = url;
+
+                document.getElementById('featureVideoPreviewPlayer').src = url;
+                document.getElementById('featureVideoPreviewBox').style.display = 'block';
+                container.style.display = 'none';
+                statusEl.textContent = '';
+
+            } catch (error) {
+                alert('Erro ao enviar vídeo: ' + error.message);
+                container.style.opacity = '1';
+                statusEl.textContent = '';
+            }
+        }
+
+        function removeFeatureVideo() {
+            currentFeatureVideoUrl = null;
+            document.getElementById('featureVideoPreviewBox').style.display = 'none';
+            document.getElementById('featureVideoUpload').style.display = 'block';
+            document.getElementById('featureVideoInput').value = '';
+        }
+
+        async function saveFeatureVideo(e) {
+            e.preventDefault();
+            const alertDiv = document.getElementById('alertVideo');
+
+            const config = {
+                feature_video_title: document.getElementById('featureVideoTitleInput').value,
+                feature_video_url: currentFeatureVideoUrl
+            };
+
+            try {
+                await apiFetch('/api/admin/site-config', { method: 'PUT', body: JSON.stringify(config) });
+
+                alertDiv.innerHTML = '<div class="alert alert-success">✓ Vídeo em destaque salvo com sucesso!</div>';
+                setTimeout(() => alertDiv.innerHTML = '', 3000);
+                reloadPreview();
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">Erro: ${error.message}</div>`;
+            }
+        }
+
         async function initConfig() {
             try {
                 const data = await apiFetch('/api/site-config');
@@ -2028,6 +2499,14 @@
                         document.getElementById('heroImagePreviewImg').src = data.hero_image;
                         document.getElementById('heroImagePreview').style.display = 'block';
                         document.getElementById('heroImageUpload').style.display = 'none';
+                    }
+
+                    document.getElementById('featureVideoTitleInput').value = data.feature_video_title || '';
+                    if (data.feature_video_url) {
+                        currentFeatureVideoUrl = data.feature_video_url;
+                        document.getElementById('featureVideoPreviewPlayer').src = data.feature_video_url;
+                        document.getElementById('featureVideoPreviewBox').style.display = 'block';
+                        document.getElementById('featureVideoUpload').style.display = 'none';
                     }
 
                     if (data.color_primary) {
@@ -2227,6 +2706,7 @@
         function openAddModal() {
             currentEditId = null;
             currentProductImageUrl = null;
+            currentProductVideoUrl = null;
             productColorsTemp = [];
             document.getElementById('modalTitle').textContent = 'Adicionar Produto';
             document.getElementById('submitBtn').textContent = 'Salvar Produto';
@@ -2234,6 +2714,8 @@
             document.getElementById('soldOut').checked = false;
             document.getElementById('productImagePreview').style.display = 'none';
             document.getElementById('productImageUpload').style.display = 'block';
+            document.getElementById('productVideoPreview').style.display = 'none';
+            document.getElementById('productVideoUpload').style.display = 'block';
             document.getElementById('productColorsList').style.display = 'none';
             document.getElementById('productModal').classList.add('active');
             lucide.createIcons();
@@ -2260,6 +2742,16 @@
                     document.getElementById('productImagePreviewImg').src = data.image_url;
                     document.getElementById('productImagePreview').style.display = 'block';
                     document.getElementById('productImageUpload').style.display = 'none';
+                }
+
+                currentProductVideoUrl = null;
+                document.getElementById('productVideoPreview').style.display = 'none';
+                document.getElementById('productVideoUpload').style.display = 'block';
+                if (data.video_url) {
+                    currentProductVideoUrl = data.video_url;
+                    document.getElementById('productVideoPreviewPlayer').src = data.video_url;
+                    document.getElementById('productVideoPreview').style.display = 'block';
+                    document.getElementById('productVideoUpload').style.display = 'none';
                 }
 
                 // Carregar cores do produto (já vêm junto na resposta)
@@ -2304,6 +2796,7 @@
                 name: document.getElementById('productName').value,
                 category_id: document.getElementById('productCategory').value || null,
                 image_url: currentProductImageUrl,
+                video_url: currentProductVideoUrl,
                 old_price: parseFloat(document.getElementById('oldPrice').value),
                 new_price: parseFloat(document.getElementById('newPrice').value),
                 discount_percentage: parseInt(document.getElementById('discount').value),
@@ -2337,6 +2830,7 @@
             document.getElementById('productModal').classList.remove('active');
             document.getElementById('productForm').reset();
             removeProductImage();
+            removeProductVideo();
             productColorsTemp = [];
             currentEditId = null;
         }

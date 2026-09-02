@@ -35,14 +35,16 @@ function requireAdmin(req, res, next) {
 }
 
 // ---------- Upload de imagens ----------
+const IMAGE_UPLOAD_FOLDERS = { hero: 'hero', banner: 'banners' };
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const type = req.query.type === 'hero' ? 'hero' : 'products';
-        cb(null, path.join(UPLOADS_DIR, type));
+        const folder = IMAGE_UPLOAD_FOLDERS[req.query.type] || 'products';
+        cb(null, path.join(UPLOADS_DIR, folder));
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname) || '';
-        const name = `${req.query.type === 'hero' ? 'hero-' : ''}${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+        const prefix = IMAGE_UPLOAD_FOLDERS[req.query.type] ? `${req.query.type}-` : '';
+        const name = `${prefix}${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
         cb(null, name);
     }
 });
@@ -61,8 +63,46 @@ app.post('/api/admin/upload', requireAdmin, (req, res) => {
     upload.single('image')(req, res, (err) => {
         if (err) return res.status(400).json({ error: err.message });
         if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-        const type = req.query.type === 'hero' ? 'hero' : 'products';
-        const url = `/uploads/${type}/${req.file.filename}`;
+        const folder = IMAGE_UPLOAD_FOLDERS[req.query.type] || 'products';
+        const url = `/uploads/${folder}/${req.file.filename}`;
+        res.json({ url });
+    });
+});
+
+// ---------- Upload de vídeos (produto ou site, até 50MB) ----------
+const videoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const type = req.query.type === 'site' ? 'site' : 'products';
+        cb(null, path.join(UPLOADS_DIR, 'videos', type));
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname) || '.mp4';
+        const name = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`;
+        cb(null, name);
+    }
+});
+const uploadVideo = multer({
+    storage: videoStorage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('video/')) {
+            return cb(new Error('Arquivo precisa ser um vídeo'));
+        }
+        cb(null, true);
+    }
+});
+
+app.post('/api/admin/upload-video', requireAdmin, (req, res) => {
+    uploadVideo.single('video')(req, res, (err) => {
+        if (err) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ error: 'Vídeo muito grande! Máximo 50MB' });
+            }
+            return res.status(400).json({ error: err.message });
+        }
+        if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+        const type = req.query.type === 'site' ? 'site' : 'products';
+        const url = `/uploads/videos/${type}/${req.file.filename}`;
         res.json({ url });
     });
 });
@@ -85,6 +125,11 @@ app.get('/api/products', (req, res) => {
 
 app.get('/api/product-colors', (req, res) => {
     const rows = db.prepare('SELECT * FROM product_colors').all();
+    res.json(rows);
+});
+
+app.get('/api/banners', (req, res) => {
+    const rows = db.prepare('SELECT * FROM banners ORDER BY position ASC').all();
     res.json(rows);
 });
 
@@ -140,6 +185,53 @@ app.delete('/api/admin/categories/:id', requireAdmin, (req, res) => {
     res.json({ ok: true });
 });
 
+// Banners (carrossel — máximo de 5)
+const MAX_BANNERS = 5;
+
+app.get('/api/admin/banners', requireAdmin, (req, res) => {
+    const rows = db.prepare('SELECT * FROM banners ORDER BY position ASC').all();
+    res.json(rows);
+});
+
+app.post('/api/admin/banners', requireAdmin, (req, res) => {
+    const { image_url, link_url } = req.body;
+    if (!image_url) return res.status(400).json({ error: 'Imagem é obrigatória' });
+
+    const count = db.prepare('SELECT COUNT(*) as total FROM banners').get();
+    if (count.total >= MAX_BANNERS) {
+        return res.status(400).json({ error: `Máximo de ${MAX_BANNERS} banners no carrossel` });
+    }
+
+    const maxPos = db.prepare('SELECT MAX(position) as maxPos FROM banners').get();
+    const position = (maxPos.maxPos || 0) + 1;
+
+    const info = db.prepare(
+        'INSERT INTO banners (image_url, link_url, position, updated_at) VALUES (?, ?, ?, datetime(\'now\'))'
+    ).run(image_url, link_url || null, position);
+
+    res.json(db.prepare('SELECT * FROM banners WHERE id = ?').get(info.lastInsertRowid));
+});
+
+app.put('/api/admin/banners/:id', requireAdmin, (req, res) => {
+    const existing = db.prepare('SELECT * FROM banners WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Banner não encontrado' });
+
+    const image_url = req.body.image_url ?? existing.image_url;
+    const link_url = req.body.link_url !== undefined ? req.body.link_url : existing.link_url;
+    const position = req.body.position !== undefined ? req.body.position : existing.position;
+
+    db.prepare(
+        'UPDATE banners SET image_url = ?, link_url = ?, position = ?, updated_at = datetime(\'now\') WHERE id = ?'
+    ).run(image_url, link_url || null, position, req.params.id);
+
+    res.json(db.prepare('SELECT * FROM banners WHERE id = ?').get(req.params.id));
+});
+
+app.delete('/api/admin/banners/:id', requireAdmin, (req, res) => {
+    db.prepare('DELETE FROM banners WHERE id = ?').run(req.params.id);
+    res.json({ ok: true });
+});
+
 // Produtos
 app.get('/api/admin/products', requireAdmin, (req, res) => {
     const rows = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
@@ -155,7 +247,7 @@ app.get('/api/admin/products/:id', requireAdmin, (req, res) => {
 
 app.post('/api/admin/products', requireAdmin, (req, res) => {
     const {
-        name, category_id, image_url, old_price, new_price,
+        name, category_id, image_url, video_url, old_price, new_price,
         discount_percentage, sold_out, colors
     } = req.body;
 
@@ -169,10 +261,10 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
     const insertProduct = db.transaction(() => {
         const info = db.prepare(`
             INSERT INTO products
-                (name, category_id, image_url, old_price, new_price, discount_percentage, sold_out, position, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                (name, category_id, image_url, video_url, old_price, new_price, discount_percentage, sold_out, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         `).run(
-            name, category_id || null, image_url,
+            name, category_id || null, image_url, video_url || null,
             old_price || 0, new_price || 0, discount_percentage || 0,
             sold_out ? 1 : 0, position
         );
@@ -200,20 +292,21 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Produto não encontrado' });
 
     const {
-        name, category_id, image_url, old_price, new_price,
+        name, category_id, image_url, video_url, old_price, new_price,
         discount_percentage, sold_out, position, colors
     } = req.body;
 
     const updateProduct = db.transaction(() => {
         db.prepare(`
             UPDATE products SET
-                name = ?, category_id = ?, image_url = ?, old_price = ?, new_price = ?,
+                name = ?, category_id = ?, image_url = ?, video_url = ?, old_price = ?, new_price = ?,
                 discount_percentage = ?, sold_out = ?, position = ?, updated_at = datetime('now')
             WHERE id = ?
         `).run(
             name ?? existing.name,
             category_id !== undefined ? category_id : existing.category_id,
             image_url ?? existing.image_url,
+            video_url !== undefined ? video_url : existing.video_url,
             old_price !== undefined ? old_price : existing.old_price,
             new_price !== undefined ? new_price : existing.new_price,
             discount_percentage !== undefined ? discount_percentage : existing.discount_percentage,
@@ -255,6 +348,7 @@ app.put('/api/admin/site-config', requireAdmin, (req, res) => {
     const fields = [
         'store_name', 'promo_banner', 'free_shipping_value', 'newsletter_discount',
         'hero_title_1', 'hero_title_2', 'hero_subtitle', 'hero_button', 'hero_image',
+        'feature_video_url', 'feature_video_title',
         'color_primary', 'color_secondary', 'color_cta',
         'whatsapp', 'phone', 'email', 'city', 'state', 'working_hours',
         'facebook', 'instagram', 'pinterest'
