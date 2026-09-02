@@ -8,6 +8,28 @@ let currentCategory = "promocoes"
 // Declare lucide variable before using it
 const lucide = window.lucide
 
+// Barra de progresso de leitura + nav com sombra ao rolar
+function initScrollEffects() {
+  const progressBar = document.getElementById("scrollProgressBar")
+  const nav = document.getElementById("siteNav")
+
+  function onScroll() {
+    if (progressBar) {
+      const scrollTop = window.scrollY
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
+      progressBar.style.width = progress + "%"
+    }
+
+    if (nav) {
+      nav.classList.toggle("nav-scrolled", window.scrollY > 30)
+    }
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true })
+  onScroll()
+}
+
 // Scroll Reveal Animation
 function initScrollReveal() {
   const observerOptions = {
@@ -788,6 +810,8 @@ function restartCarouselAutoplay() {
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize scroll reveal first
   initScrollReveal()
+  initScrollEffects()
+  requestAnimationFrame(() => document.body.classList.add("loaded"))
 
   const carouselViewport = document.getElementById("carouselViewport")
   if (carouselViewport) {

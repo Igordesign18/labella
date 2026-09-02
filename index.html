@@ -9,30 +9,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="promo-banner scroll-reveal" id="promoBanner">
+    <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+
+    <div class="promo-banner" id="promoBanner">
         Frete grátis em compras acima de R$299
         <button class="close-btn" onclick="this.parentElement.style.display='none'">×</button>
     </div>
 
-    <header class="scroll-reveal">
-        <nav>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <i data-lucide="menu" id="menuIcon"></i>
-            </button>
-            <div class="logo" id="siteLogo">Labella Woman</div>
-            <ul class="nav-links" id="navCategories">
-                <!-- Categorias serão carregadas aqui dinamicamente -->
-            </ul>
-            <div class="nav-icons">
-                <button class="icon-btn"><i data-lucide="user"></i></button>
-                <button class="icon-btn cart-count" onclick="openCart()">
-                    <i data-lucide="shopping-bag"></i>
-                    <span class="cart-badge" id="cartBadge">0</span>
+    <header>
+        <nav id="siteNav">
+            <div class="nav-inner">
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" id="menuIcon"></i>
                 </button>
+                <div class="logo" id="siteLogo">Labella Woman</div>
+                <ul class="nav-links" id="navCategories">
+                    <!-- Categorias serão carregadas aqui dinamicamente -->
+                </ul>
+                <div class="nav-icons">
+                    <button class="icon-btn"><i data-lucide="user"></i></button>
+                    <button class="icon-btn cart-count" onclick="openCart()">
+                        <i data-lucide="shopping-bag"></i>
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </button>
+                </div>
             </div>
         </nav>
 
-        <section class="hero scroll-reveal" id="heroSection">
+        <section class="hero" id="heroSection">
             <div class="hero-content">
                 <div class="hero-text">
                     <h1>

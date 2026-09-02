@@ -22,6 +22,10 @@
   --font-sans: "Manrope", -apple-system, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -39,16 +43,28 @@ a {
   color: inherit;
 }
 
+/* Barra de progresso de leitura */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--color-secondary);
+  z-index: 9998;
+  transition: width 0.1s linear;
+}
+
 /* Scroll reveal */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  transform: translateY(32px) scale(0.985);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .scroll-reveal.revealed {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .scroll-reveal:nth-child(1) { transition-delay: 0.05s; }
@@ -98,13 +114,24 @@ a {
 
 /* Header */
 header {
-  background: var(--cream);
-  border-bottom: 1px solid var(--line);
   position: relative;
-  z-index: 100;
 }
 
 nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--cream);
+  border-bottom: 1px solid transparent;
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+nav.nav-scrolled {
+  box-shadow: 0 4px 24px rgba(36, 31, 28, 0.08);
+  border-bottom-color: var(--line);
+}
+
+.nav-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -137,10 +164,30 @@ nav {
   font-size: 13px;
   letter-spacing: 0.03em;
   transition: color 0.25s;
+  position: relative;
+  padding-bottom: 3px;
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-links a:hover {
   color: var(--color-primary);
+}
+
+.nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 .mobile-menu-btn {
@@ -292,7 +339,46 @@ nav {
   border-top: 1px solid rgba(251, 247, 241, 0.2);
 }
 
+/* Entrada coreografada do Hero (dispara uma vez, ao carregar a página) */
+.hero-text h1,
+.hero-text .subtitle,
+.hero-text .cta-button {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+body.loaded .hero-text h1 {
+  animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+
+body.loaded .hero-text .subtitle {
+  animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+
+body.loaded .hero-text .cta-button {
+  animation: heroReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+@keyframes heroReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-text h1,
+  .hero-text .subtitle,
+  .hero-text .cta-button {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
 .cta-button {
+  position: relative;
+  overflow: hidden;
   background: var(--color-secondary);
   color: var(--ink);
   padding: 17px 42px;
@@ -305,6 +391,22 @@ nav {
   transition: background 0.3s, transform 0.3s;
 }
 
+.cta-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+}
+
+.cta-button:hover::after {
+  left: 130%;
+}
+
 .cta-button:hover {
   background: var(--cream);
   transform: translateY(-2px);
@@ -315,6 +417,7 @@ nav {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .hero-image img {
@@ -323,6 +426,18 @@ nav {
   height: auto;
   border: 1px solid rgba(251, 247, 241, 0.15);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+  animation: heroBreathe 16s ease-in-out infinite alternate;
+}
+
+@keyframes heroBreathe {
+  from { transform: scale(1); }
+  to { transform: scale(1.035); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image img {
+    animation: none;
+  }
 }
 
 /* Carrossel de banners */
@@ -627,6 +742,8 @@ nav {
 }
 
 .buy-button {
+  position: relative;
+  overflow: hidden;
   flex: 1;
   background: var(--ink);
   color: var(--cream);
@@ -643,6 +760,22 @@ nav {
   align-items: center;
   justify-content: center;
   gap: 10px;
+}
+
+.buy-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+}
+
+.buy-button:hover:not(:disabled)::after {
+  left: 130%;
 }
 
 .buy-button:hover {
@@ -892,13 +1025,14 @@ nav {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.25s, color 0.25s;
+  transition: border-color 0.25s, color 0.25s, transform 0.25s;
   color: var(--cream);
 }
 
 .social-icon:hover {
   border-color: var(--color-secondary);
   color: var(--color-secondary);
+  transform: translateY(-3px);
 }
 
 .footer-contact-item {
