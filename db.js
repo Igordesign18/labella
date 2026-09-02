@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS site_config (
     color_primary TEXT,
     color_secondary TEXT,
     color_cta TEXT,
+    theme_mode TEXT,
     whatsapp TEXT,
     phone TEXT,
     email TEXT,
@@ -98,6 +99,7 @@ function ensureColumn(table, column, definition) {
 ensureColumn('products', 'video_url', 'TEXT');
 ensureColumn('site_config', 'feature_video_url', 'TEXT');
 ensureColumn('site_config', 'feature_video_title', 'TEXT');
+ensureColumn('site_config', 'theme_mode', 'TEXT');
 
 // Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo).
 const configRow = db.prepare('SELECT id FROM site_config LIMIT 1').get();

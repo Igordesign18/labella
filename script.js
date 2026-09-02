@@ -145,6 +145,8 @@ async function loadSiteColorsAndConfig() {
         document.documentElement.style.setProperty("--color-cta", data.color_cta)
       }
 
+      document.body.classList.toggle("theme-dark", data.theme_mode === "dark")
+
       if (data.store_name) {
         document.getElementById("siteLogo").textContent = data.store_name
         document.title = `${data.store_name} | Moda Feminina Atemporal`

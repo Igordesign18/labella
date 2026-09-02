@@ -22,6 +22,18 @@
   --font-sans: "Manrope", -apple-system, sans-serif;
 }
 
+/* Modo escuro — ativado via classe "theme-dark" no <body>, controlada pelo
+   painel (aba Cores & Design > Temas Escuros). Sobrescreve só a paleta de
+   fundo/texto; --color-primary/secondary/cta continuam vindo do painel. */
+body.theme-dark {
+  --ink: #f3ede4;
+  --ink-soft: #cabfb2;
+  --cream: #15110e;
+  --cream-deep: #1d1712;
+  --line: #34291f;
+  --white: #221b15;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -83,8 +95,8 @@ a {
 
 /* Promo banner */
 .promo-banner {
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   text-align: center;
   padding: 11px 20px;
   font-size: 13px;
@@ -100,7 +112,7 @@ a {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--cream);
+  color: #fbf7f1;
   opacity: 0.6;
   font-size: 18px;
   cursor: pointer;
@@ -270,7 +282,7 @@ nav.nav-scrolled {
   top: -6px;
   right: -8px;
   background: var(--color-primary);
-  color: var(--cream);
+  color: #fbf7f1;
   font-size: 10px;
   font-weight: 700;
   width: 17px;
@@ -285,7 +297,7 @@ nav.nav-scrolled {
 .hero {
   position: relative;
   min-height: 82vh;
-  background: var(--ink);
+  background: #241f1c;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -357,7 +369,7 @@ nav.nav-scrolled {
 }
 
 .hero-text h1 .white {
-  color: var(--cream);
+  color: #fbf7f1;
 }
 
 .hero-text h1 .pink {
@@ -419,7 +431,7 @@ body.loaded .hero-text .cta-button {
   position: relative;
   overflow: hidden;
   background: var(--color-secondary);
-  color: var(--ink);
+  color: #241f1c;
   padding: 17px 42px;
   font-size: 13px;
   font-weight: 700;
@@ -447,7 +459,7 @@ body.loaded .hero-text .cta-button {
 }
 
 .cta-button:hover {
-  background: var(--cream);
+  background: #fbf7f1;
   transform: translateY(-2px);
 }
 
@@ -481,7 +493,7 @@ body.loaded .hero-text .cta-button {
 
 /* Carrossel de banners */
 .banner-carousel {
-  background: var(--ink);
+  background: #241f1c;
 }
 
 .carousel-viewport {
@@ -520,7 +532,7 @@ body.loaded .hero-text .cta-button {
   border-radius: 50%;
   border: 1px solid rgba(251, 247, 241, 0.4);
   background: rgba(36, 31, 28, 0.45);
-  color: var(--cream);
+  color: #fbf7f1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -531,7 +543,7 @@ body.loaded .hero-text .cta-button {
 
 .carousel-arrow:hover {
   background: rgba(36, 31, 28, 0.75);
-  border-color: var(--cream);
+  border-color: #fbf7f1;
 }
 
 .carousel-arrow.prev {
@@ -645,8 +657,8 @@ body.loaded .hero-text .cta-button {
   position: absolute;
   top: 14px;
   left: 14px;
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   padding: 7px 12px;
   border-radius: 0;
   font-weight: 600;
@@ -663,7 +675,7 @@ body.loaded .hero-text .cta-button {
   height: 38px;
   border-radius: 50%;
   background: rgba(36, 31, 28, 0.75);
-  color: var(--cream);
+  color: #fbf7f1;
   border: 1px solid rgba(251, 247, 241, 0.5);
   display: flex;
   align-items: center;
@@ -687,8 +699,8 @@ body.loaded .hero-text .cta-button {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   padding: 13px 44px;
   font-weight: 600;
   font-size: 18px;
@@ -784,8 +796,8 @@ body.loaded .hero-text .cta-button {
   position: relative;
   overflow: hidden;
   flex: 1;
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   padding: 15px;
   border: none;
   border-radius: 2px;
@@ -823,7 +835,7 @@ body.loaded .hero-text .cta-button {
 
 .buy-button:disabled {
   background: #cfc7ba;
-  color: var(--ink-soft);
+  color: #4a423c;
   cursor: not-allowed;
 }
 
@@ -878,7 +890,7 @@ body.loaded .hero-text .cta-button {
   border: 1px solid var(--line);
   border-radius: 2px;
   overflow: hidden;
-  background: var(--ink);
+  background: #241f1c;
   box-shadow: 0 20px 50px rgba(36, 31, 28, 0.12);
 }
 
@@ -886,7 +898,7 @@ body.loaded .hero-text .cta-button {
   display: block;
   width: 100%;
   max-height: 640px;
-  background: var(--ink);
+  background: #241f1c;
 }
 
 /* Features */
@@ -934,8 +946,8 @@ body.loaded .hero-text .cta-button {
 /* Newsletter */
 .newsletter {
   padding: 90px 5%;
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   text-align: center;
 }
 
@@ -971,7 +983,7 @@ body.loaded .hero-text .cta-button {
   font-size: 14px;
   outline: none;
   background: transparent;
-  color: var(--cream);
+  color: #fbf7f1;
 }
 
 .newsletter-input::placeholder {
@@ -981,7 +993,7 @@ body.loaded .hero-text .cta-button {
 .newsletter-button {
   padding: 16px 36px;
   background: var(--color-secondary);
-  color: var(--ink);
+  color: #241f1c;
   border: none;
   border-radius: 2px;
   font-size: 13px;
@@ -993,13 +1005,13 @@ body.loaded .hero-text .cta-button {
 }
 
 .newsletter-button:hover {
-  background: var(--cream);
+  background: #fbf7f1;
 }
 
 /* Footer */
 .footer {
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   padding: 70px 5% 30px;
 }
 
@@ -1065,7 +1077,7 @@ body.loaded .hero-text .cta-button {
   justify-content: center;
   cursor: pointer;
   transition: border-color 0.25s, color 0.25s, transform 0.25s;
-  color: var(--cream);
+  color: #fbf7f1;
 }
 
 .social-icon:hover {
@@ -1350,12 +1362,12 @@ body.loaded .hero-text .cta-button {
   border-radius: 50%;
   font-size: 24px;
   cursor: pointer;
-  color: var(--cream);
+  color: #fbf7f1;
   transition: all 0.25s;
 }
 
 .fullscreen-image-modal .close-fullscreen:hover {
-  border-color: var(--cream);
+  border-color: #fbf7f1;
 }
 
 @keyframes fadeIn {
@@ -1405,12 +1417,12 @@ body.loaded .hero-text .cta-button {
   flex-shrink: 0;
   width: 52px;
   height: 52px;
-  background: var(--ink);
+  background: #241f1c;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--cream);
+  color: #fbf7f1;
   animation: cartPulse 0.7s ease-out;
 }
 
@@ -1450,8 +1462,8 @@ body.loaded .hero-text .cta-button {
 }
 
 .floating-cart-btn {
-  background: var(--ink);
-  color: var(--cream);
+  background: #241f1c;
+  color: #fbf7f1;
   border: none;
   padding: 8px 16px;
   border-radius: 2px;
@@ -1588,7 +1600,7 @@ body.loaded .hero-text .cta-button {
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--ink);
+    background: #241f1c;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -1602,7 +1614,7 @@ body.loaded .hero-text .cta-button {
   }
 
   .nav-links a {
-    color: var(--cream);
+    color: #fbf7f1;
     font-size: 18px;
   }
 
