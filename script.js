@@ -699,6 +699,8 @@ function showNotification(message) {
 let carouselBanners = []
 let carouselIndex = 0
 let carouselTimer = null
+let heroBgIndex = 0
+let heroBgTimer = null
 
 async function loadBanners() {
   try {
@@ -706,6 +708,7 @@ async function loadBanners() {
     if (!response.ok) throw new Error("Erro ao carregar banners")
     carouselBanners = (await response.json()) || []
     renderCarousel()
+    renderHeroBackground()
   } catch (error) {
     console.error("Erro ao carregar banners:", error)
   }
@@ -805,6 +808,49 @@ function stopCarouselAutoplay() {
 
 function restartCarouselAutoplay() {
   if (carouselBanners.length > 1) startCarouselAutoplay()
+}
+
+// Fundo do Hero: as mesmas imagens do carrossel, desfocadas e em crossfade lento
+function renderHeroBackground() {
+  const bgLayer = document.getElementById("heroBgLayer")
+  if (!bgLayer) return
+
+  bgLayer.innerHTML = ""
+  stopHeroBgCycle()
+
+  if (!carouselBanners.length) return
+
+  carouselBanners.forEach((banner, index) => {
+    const img = document.createElement("img")
+    img.src = banner.image_url
+    img.alt = ""
+    if (index === 0) img.classList.add("active")
+    bgLayer.appendChild(img)
+  })
+
+  heroBgIndex = 0
+
+  if (carouselBanners.length > 1) {
+    startHeroBgCycle()
+  }
+}
+
+function startHeroBgCycle() {
+  stopHeroBgCycle()
+  heroBgTimer = setInterval(() => {
+    const imgs = document.querySelectorAll("#heroBgLayer img")
+    if (imgs.length < 2) return
+    imgs[heroBgIndex].classList.remove("active")
+    heroBgIndex = (heroBgIndex + 1) % imgs.length
+    imgs[heroBgIndex].classList.add("active")
+  }, 5000)
+}
+
+function stopHeroBgCycle() {
+  if (heroBgTimer) {
+    clearInterval(heroBgTimer)
+    heroBgTimer = null
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
