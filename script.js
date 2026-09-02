@@ -890,10 +890,70 @@ async function handleNewsletterSubmit(event) {
   }
 }
 
+// Fundo animado 3D — flutuação suave + paralaxe pelo mouse nas orbes de fundo
+function initAmbientBackground() {
+  const orbs = document.querySelectorAll(".ambient-orb")
+  if (!orbs.length) return
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
+
+  // Cada orbe recebe uma "profundidade" diferente: quanto maior, mais ela
+  // se move com o mouse e o tempo — cria a ilusão de camadas em 3D.
+  const orbConfigs = Array.from(orbs).map((el, i) => ({
+    el,
+    depth: 0.5 + i * 0.35, // 0.5, 0.85, 1.2, 1.55
+    phase: i * 2.1,
+    floatRange: 26 + i * 6,
+  }))
+
+  if (prefersReducedMotion) return // mantém as orbes paradas, sem animação
+
+  let mouseX = 0
+  let mouseY = 0
+  let targetX = 0
+  let targetY = 0
+
+  if (!isTouchDevice) {
+    window.addEventListener(
+      "mousemove",
+      (e) => {
+        targetX = (e.clientX / window.innerWidth - 0.5) * 2 // -1 a 1
+        targetY = (e.clientY / window.innerHeight - 0.5) * 2
+      },
+      { passive: true },
+    )
+  }
+
+  let frame = 0
+  function animateAmbient() {
+    frame++
+    // Suaviza o movimento do mouse (easing) para não ficar brusco
+    mouseX += (targetX - mouseX) * 0.04
+    mouseY += (targetY - mouseY) * 0.04
+
+    const t = frame * 0.006
+    orbConfigs.forEach(({ el, depth, phase, floatRange }) => {
+      const floatX = Math.sin(t + phase) * floatRange
+      const floatY = Math.cos(t * 0.8 + phase) * floatRange
+      const parallaxX = mouseX * 30 * depth
+      const parallaxY = mouseY * 30 * depth
+      const z = Math.sin(t * 0.5 + phase) * 40 * depth
+
+      el.style.transform = `translate3d(${floatX + parallaxX}px, ${floatY + parallaxY}px, ${z}px)`
+    })
+
+    requestAnimationFrame(animateAmbient)
+  }
+
+  requestAnimationFrame(animateAmbient)
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize scroll reveal first
   initScrollReveal()
   initScrollEffects()
+  initAmbientBackground()
   requestAnimationFrame(() => document.body.classList.add("loaded"))
 
   const carouselViewport = document.getElementById("carouselViewport")

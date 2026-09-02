@@ -59,6 +59,86 @@ a {
   color: inherit;
 }
 
+/* ===================================================================
+   Fundo animado 3D — camada fixa e sutil sobre todo o site.
+   Orbes desfocadas com leve profundidade (translateZ) e paralaxe pelo
+   mouse, controladas via JS em initAmbientBackground() (script.js).
+   mix-blend-mode: soft-light funciona bem tanto sobre fundos claros
+   quanto escuros, sem lavar o contraste do texto.
+   =================================================================== */
+.ambient-3d-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1200px;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  opacity: 0.5;
+  mix-blend-mode: soft-light;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.orb-a {
+  width: 460px;
+  height: 460px;
+  top: -8%;
+  left: -10%;
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+}
+
+.orb-b {
+  width: 400px;
+  height: 400px;
+  top: 35%;
+  right: -12%;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+}
+
+.orb-c {
+  width: 340px;
+  height: 340px;
+  bottom: -10%;
+  left: 18%;
+  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
+}
+
+.orb-d {
+  width: 260px;
+  height: 260px;
+  top: 68%;
+  left: 62%;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+}
+
+/* Textura de grão sutil por cima das orbes — dá o acabamento "premium" */
+.ambient-3d-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+@media (max-width: 640px) {
+  .ambient-orb {
+    filter: blur(55px);
+    opacity: 0.32;
+  }
+  .orb-d { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb { transition: none; }
+}
+
 /* Barra de progresso de leitura */
 .scroll-progress-bar {
   position: fixed;
@@ -347,98 +427,6 @@ nav.nav-scrolled {
   .hero-bg img {
     transition: none;
   }
-}
-
-/* Fundo animado — orbes de luz suaves flutuando (cores da marca) */
-.hero-glow {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.4;
-  mix-blend-mode: screen;
-  will-change: transform;
-  animation: heroGlowFloat 20s ease-in-out infinite alternate;
-}
-
-.glow-orb-1 {
-  width: 420px;
-  height: 420px;
-  top: -12%;
-  left: -8%;
-  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
-  animation-duration: 22s;
-}
-
-.glow-orb-2 {
-  width: 380px;
-  height: 380px;
-  bottom: -18%;
-  right: -6%;
-  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
-  animation-duration: 26s;
-  animation-delay: -6s;
-}
-
-.glow-orb-3 {
-  width: 260px;
-  height: 260px;
-  top: 38%;
-  left: 58%;
-  background: radial-gradient(circle, var(--color-secondary) 0%, transparent 70%);
-  animation-duration: 16s;
-  animation-delay: -3s;
-}
-
-@keyframes heroGlowFloat {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, -30px) scale(1.1); }
-  100% { transform: translate(-30px, 25px) scale(0.94); }
-}
-
-/* Fundo animado — partículas douradas cintilando */
-.hero-sparkles {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.sparkle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--color-secondary);
-  border-radius: 50%;
-  box-shadow: 0 0 10px 2px var(--color-secondary);
-  opacity: 0;
-  animation: sparkleTwinkle 3.6s ease-in-out infinite;
-}
-
-@keyframes sparkleTwinkle {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 0.95; transform: scale(1.4); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .glow-orb,
-  .sparkle {
-    animation: none;
-    opacity: 0.2;
-  }
-}
-
-@media (max-width: 640px) {
-  .glow-orb-1 { width: 260px; height: 260px; }
-  .glow-orb-2 { width: 220px; height: 220px; }
-  .glow-orb-3 { display: none; }
 }
 
 .hero-content {
