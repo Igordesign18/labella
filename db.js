@@ -56,6 +56,13 @@ CREATE TABLE IF NOT EXISTS banners (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS leads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    whatsapp TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS site_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     store_name TEXT,

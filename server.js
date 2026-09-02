@@ -133,8 +133,31 @@ app.get('/api/banners', (req, res) => {
     res.json(rows);
 });
 
+// Cadastro do formulário de newsletter (leads)
+app.post('/api/leads', (req, res) => {
+    const { email, whatsapp } = req.body;
+    if (!email || !email.trim()) return res.status(400).json({ error: 'E-mail é obrigatório' });
+
+    const info = db.prepare(
+        'INSERT INTO leads (email, whatsapp, created_at) VALUES (?, ?, datetime(\'now\'))'
+    ).run(email.trim(), whatsapp ? whatsapp.trim() : null);
+
+    res.json(db.prepare('SELECT * FROM leads WHERE id = ?').get(info.lastInsertRowid));
+});
+
 // ---------- Rotas administrativas (painel) ----------
 app.get('/api/admin/verify', requireAdmin, (req, res) => {
+    res.json({ ok: true });
+});
+
+// Leads (cadastros do formulário de newsletter do site)
+app.get('/api/admin/leads', requireAdmin, (req, res) => {
+    const rows = db.prepare('SELECT * FROM leads ORDER BY created_at DESC').all();
+    res.json(rows);
+});
+
+app.delete('/api/admin/leads/:id', requireAdmin, (req, res) => {
+    db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
     res.json({ ok: true });
 });
 

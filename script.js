@@ -855,6 +855,41 @@ function stopHeroBgCycle() {
   }
 }
 
+async function handleNewsletterSubmit(event) {
+  event.preventDefault()
+
+  const emailInput = document.getElementById("newsletterEmail")
+  const whatsappInput = document.getElementById("newsletterWhatsapp")
+  const button = document.getElementById("newsletterButton")
+
+  const email = emailInput.value.trim()
+  const whatsapp = whatsappInput.value.trim()
+
+  const originalText = button.textContent
+  button.disabled = true
+  button.textContent = "Enviando..."
+
+  try {
+    const response = await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, whatsapp }),
+    })
+
+    if (!response.ok) throw new Error("Erro ao cadastrar")
+
+    alert("Obrigada por se cadastrar!")
+    emailInput.value = ""
+    whatsappInput.value = "+55 "
+  } catch (error) {
+    console.error("Erro ao enviar cadastro:", error)
+    alert("Não foi possível concluir o cadastro. Tente novamente em instantes.")
+  } finally {
+    button.disabled = false
+    button.textContent = originalText
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize scroll reveal first
   initScrollReveal()

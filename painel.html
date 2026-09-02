@@ -857,6 +857,10 @@
                 <i data-lucide="share-2" style="width: 18px; height: 18px;"></i>
                 Redes Sociais
             </button>
+            <button class="tab" onclick="switchTab('leads')">
+                <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+                Leads
+            </button>
         </div>
 
         <!-- Aba Geral -->
@@ -1254,6 +1258,29 @@
                         Salvar Redes Sociais
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Aba Leads -->
+        <div id="leads" class="tab-content">
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="section-title" style="margin: 0;">
+                        <i data-lucide="users"></i>
+                        Cadastros do site (Leads)
+                    </h2>
+                    <button type="button" class="btn btn-secondary" onclick="loadLeads()">
+                        <i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i>
+                        Atualizar
+                    </button>
+                </div>
+                <p style="color: #999; margin-top: -10px; margin-bottom: 20px; font-size: 14px;">
+                    Toda vez que alguém preenche o formulário "Receba nossas novidades" no site, o e-mail e o WhatsApp aparecem aqui.
+                </p>
+                <div id="alertLeads"></div>
+                <div id="leadsContainer" style="margin-top: 10px;">
+                    Carregando cadastros...
+                </div>
             </div>
         </div>
       </div>
@@ -1688,6 +1715,8 @@
                 loadCategories();
             } else if (tabName === 'banners') {
                 loadBanners();
+            } else if (tabName === 'leads') {
+                loadLeads();
             }
 
             lucide.createIcons();
@@ -1878,6 +1907,70 @@
 
                 loadCategories();
                 reloadPreview();
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        }
+
+        async function loadLeads() {
+            const container = document.getElementById('leadsContainer');
+            try {
+                const data = await apiFetch('/api/admin/leads');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">Nenhum cadastro recebido ainda</p>';
+                    return;
+                }
+
+                const rows = data.map(lead => {
+                    const date = new Date(lead.created_at.replace(' ', 'T') + 'Z');
+                    const formattedDate = isNaN(date.getTime()) ? lead.created_at : date.toLocaleString('pt-BR');
+                    return `
+                        <tr>
+                            <td>${lead.email}</td>
+                            <td>${lead.whatsapp || '-'}</td>
+                            <td>${formattedDate}</td>
+                            <td>
+                                <button class="btn btn-danger btn-small" onclick="deleteLead('${lead.id}')">
+                                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                                    Excluir
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                                <th style="padding: 10px;">E-mail</th>
+                                <th style="padding: 10px;">WhatsApp</th>
+                                <th style="padding: 10px;">Data</th>
+                                <th style="padding: 10px;">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+                lucide.createIcons();
+            } catch (error) {
+                container.innerHTML = '<p style="text-align: center; color: #c00;">Erro ao carregar cadastros</p>';
+                console.error('Erro ao carregar leads:', error);
+            }
+        }
+
+        async function deleteLead(id) {
+            if (!confirm('Tem certeza que deseja excluir este cadastro?')) return;
+
+            try {
+                await apiFetch(`/api/admin/leads/${id}`, { method: 'DELETE' });
+
+                const alertDiv = document.getElementById('alertLeads');
+                alertDiv.innerHTML = '<div class="alert alert-success">✓ Cadastro excluído com sucesso!</div>';
+                setTimeout(() => alertDiv.innerHTML = '', 3000);
+
+                loadLeads();
             } catch (error) {
                 alert('Erro ao excluir: ' + error.message);
             }

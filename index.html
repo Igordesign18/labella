@@ -38,6 +38,21 @@
 
         <section class="hero" id="heroSection">
             <div class="hero-bg" id="heroBgLayer"></div>
+            <div class="hero-glow" aria-hidden="true">
+                <span class="glow-orb glow-orb-1"></span>
+                <span class="glow-orb glow-orb-2"></span>
+                <span class="glow-orb glow-orb-3"></span>
+            </div>
+            <div class="hero-sparkles" aria-hidden="true">
+                <span class="sparkle" style="top: 18%; left: 10%; animation-delay: 0s;"></span>
+                <span class="sparkle" style="top: 32%; left: 88%; animation-delay: 0.6s;"></span>
+                <span class="sparkle" style="top: 68%; left: 20%; animation-delay: 1.2s;"></span>
+                <span class="sparkle" style="top: 78%; left: 92%; animation-delay: 1.8s;"></span>
+                <span class="sparkle" style="top: 12%; left: 55%; animation-delay: 2.4s;"></span>
+                <span class="sparkle" style="top: 50%; left: 75%; animation-delay: 0.9s;"></span>
+                <span class="sparkle" style="top: 85%; left: 45%; animation-delay: 1.5s;"></span>
+                <span class="sparkle" style="top: 40%; left: 5%; animation-delay: 2.1s;"></span>
+            </div>
             <div class="hero-content">
                 <div class="hero-text">
                     <h1>
@@ -119,10 +134,10 @@
     <section class="newsletter scroll-reveal">
         <h2>Receba nossas novidades</h2>
         <p>Cadastre-se e ganhe 15% de desconto na primeira compra</p>
-        <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Obrigada por se cadastrar!');">
-            <input type="email" class="newsletter-input" placeholder="Seu melhor e-mail" required>
-            <input type="tel" class="newsletter-input" placeholder="Seu WhatsApp" value="+55 " required>
-            <button type="submit" class="newsletter-button">Cadastrar</button>
+        <form class="newsletter-form" id="newsletterForm" onsubmit="handleNewsletterSubmit(event)">
+            <input type="email" class="newsletter-input" id="newsletterEmail" placeholder="Seu melhor e-mail" required>
+            <input type="tel" class="newsletter-input" id="newsletterWhatsapp" placeholder="Seu WhatsApp" value="+55 " required>
+            <button type="submit" class="newsletter-button" id="newsletterButton">Cadastrar</button>
         </form>
     </section>
 
