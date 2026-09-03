@@ -179,7 +179,7 @@ async function loadSiteColorsAndConfig() {
 
       if (data.store_name) {
         document.getElementById("siteLogo").textContent = data.store_name
-        document.title = `${data.store_name} | Moda Feminina Atemporal`
+        document.title = `${data.store_name} | Coleção Cristã`
       }
 
       if (data.promo_banner) {
