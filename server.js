@@ -53,8 +53,10 @@ function requireAdmin(req, res, next) {
 // visitantes do site. Se a otimização falhar por algum motivo, o arquivo
 // original enviado é mantido (nunca quebra o upload).
 async function optimizeImage(filePath) {
-    if (!sharp) return; // sharp não carregou nesta plataforma — mantém o arquivo original
+    if (!sharp) return null; // sharp não carregou nesta plataforma — mantém o arquivo original
     try {
+        const sizeBefore = fs.statSync(filePath).size;
+
         const buffer = await sharp(filePath).rotate().resize({
             width: 1600,
             withoutEnlargement: true
@@ -72,8 +74,10 @@ async function optimizeImage(filePath) {
 
         const optimized = await pipeline.toBuffer();
         fs.writeFileSync(filePath, optimized);
+        return { before: sizeBefore, after: optimized.length };
     } catch (err) {
         console.error('Falha ao otimizar imagem (mantendo original):', err.message);
+        return null;
     }
 }
 
@@ -477,6 +481,48 @@ app.put('/api/admin/site-config', requireAdmin, (req, res) => {
 });
 
 // ---------- Arquivos estáticos ----------
+// Reprocessa todas as imagens já enviadas (produtos, hero, banners) com a
+// mesma otimização usada em novos uploads. Útil porque fotos cadastradas
+// antes dessa otimização existir continuam pesadas e deixam o site lento.
+app.post('/api/admin/optimize-existing-images', requireAdmin, async (req, res) => {
+    if (!sharp) return res.status(400).json({ error: 'Otimização de imagem indisponível neste servidor' });
+
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    const foldersToScan = ['products', 'hero', 'banners'];
+    let processed = 0;
+    let skipped = 0;
+    let sizeBefore = 0;
+    let sizeAfter = 0;
+
+    for (const folder of foldersToScan) {
+        const dir = path.join(UPLOADS_DIR, folder);
+        if (!fs.existsSync(dir)) continue;
+
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            const ext = path.extname(file).toLowerCase();
+            if (!imageExtensions.includes(ext)) continue;
+
+            const filePath = path.join(dir, file);
+            const result = await optimizeImage(filePath);
+            if (result) {
+                processed++;
+                sizeBefore += result.before;
+                sizeAfter += result.after;
+            } else {
+                skipped++;
+            }
+        }
+    }
+
+    res.json({
+        processed,
+        skipped,
+        sizeBeforeMB: (sizeBefore / (1024 * 1024)).toFixed(1),
+        sizeAfterMB: (sizeAfter / (1024 * 1024)).toFixed(1)
+    });
+});
+
 app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '30d', immutable: true }));
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 

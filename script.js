@@ -457,7 +457,7 @@ function displayProducts(products, container) {
 
     card.innerHTML = `
             <div class="product-image" onclick="openFullscreen(this)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
-                <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
+                <img src="${product.image_url}" alt="${product.name}" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
                 ${product.video_url ? `<button type="button" class="video-badge" onclick="event.stopPropagation(); openProductVideo('${product.video_url}')" title="Assistir vídeo"><i data-lucide="play" style="width: 16px; height: 16px;"></i></button>` : ""}

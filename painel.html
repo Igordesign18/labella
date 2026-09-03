@@ -950,6 +950,23 @@
                     </button>
                 </form>
             </div>
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i data-lucide="zap"></i>
+                    Manutenção — Deixar o site mais rápido
+                </h2>
+                <p style="color: var(--text-secondary, #666); margin-bottom: 16px; font-size: 14px;">
+                    Fotos de produtos cadastradas antes da otimização automática existir continuam pesadas
+                    e deixam o carregamento do site mais lento. Clique abaixo para comprimir todas as fotos
+                    já enviadas de uma vez (isso não apaga nem substitui nenhum produto, só deixa as imagens
+                    mais leves).
+                </p>
+                <div id="alertOtimizar"></div>
+                <button type="button" class="btn btn-primary" id="btnOtimizarImagens" onclick="otimizarImagensExistentes()">
+                    <i data-lucide="image-down" style="width: 18px; height: 18px;"></i>
+                    Otimizar imagens já enviadas
+                </button>
+            </div>
         </div>
 
         <!-- Aba Cores & Design -->
@@ -2865,6 +2882,31 @@
                 setTimeout(() => alertDiv.innerHTML = '', 3000);
             } catch (error) {
                 alertDiv.innerHTML = `<div class="alert alert-error">Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function otimizarImagensExistentes() {
+            const alertDiv = document.getElementById('alertOtimizar');
+            const btn = document.getElementById('btnOtimizarImagens');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" style="width: 18px; height: 18px;"></i> Otimizando... isso pode levar alguns minutos';
+            lucide.createIcons();
+            alertDiv.innerHTML = '';
+
+            try {
+                const result = await apiFetch('/api/admin/optimize-existing-images', { method: 'POST' });
+
+                alertDiv.innerHTML = `<div class="alert alert-success">
+                    ✓ ${result.processed} imagem(ns) otimizada(s): de ${result.sizeBeforeMB}MB para ${result.sizeAfterMB}MB.
+                    ${result.skipped > 0 ? `(${result.skipped} não puderam ser otimizadas e foram mantidas como estavam.)` : ''}
+                </div>`;
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">Erro: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="image-down" style="width: 18px; height: 18px;"></i> Otimizar imagens já enviadas';
+                lucide.createIcons();
             }
         }
 
