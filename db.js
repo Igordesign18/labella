@@ -109,6 +109,14 @@ ensureColumn('products', 'size', 'TEXT');
 ensureColumn('site_config', 'feature_video_url', 'TEXT');
 ensureColumn('site_config', 'feature_video_title', 'TEXT');
 ensureColumn('site_config', 'theme_mode', 'TEXT');
+ensureColumn('site_config', 'feature1_title', 'TEXT');
+ensureColumn('site_config', 'feature1_desc', 'TEXT');
+ensureColumn('site_config', 'feature2_title', 'TEXT');
+ensureColumn('site_config', 'feature2_desc', 'TEXT');
+ensureColumn('site_config', 'feature3_title', 'TEXT');
+ensureColumn('site_config', 'feature3_desc', 'TEXT');
+ensureColumn('site_config', 'feature4_title', 'TEXT');
+ensureColumn('site_config', 'feature4_desc', 'TEXT');
 
 // Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo).
 const configRow = db.prepare('SELECT id FROM site_config LIMIT 1').get();

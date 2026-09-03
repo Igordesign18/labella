@@ -896,6 +896,60 @@
                     </button>
                 </form>
             </div>
+
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i data-lucide="badge-check"></i>
+                    Benefícios da Loja (seção "Por que vestir")
+                </h2>
+                <div id="alertBeneficios"></div>
+                <form onsubmit="saveBeneficios(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Benefício 1 — Título</label>
+                            <input type="text" id="feature1Title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Benefício 1 — Descrição</label>
+                            <input type="text" id="feature1Desc" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Benefício 2 — Título</label>
+                            <input type="text" id="feature2Title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Benefício 2 — Descrição</label>
+                            <input type="text" id="feature2Desc" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Benefício 3 — Título</label>
+                            <input type="text" id="feature3Title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Benefício 3 — Descrição</label>
+                            <input type="text" id="feature3Desc" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Benefício 4 — Título</label>
+                            <input type="text" id="feature4Title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Benefício 4 — Descrição</label>
+                            <input type="text" id="feature4Desc" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+                        Salvar Benefícios
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Aba Cores & Design -->
@@ -2729,6 +2783,15 @@
                     document.getElementById('facebook').value = data.facebook || '';
                     document.getElementById('instagram').value = data.instagram || '';
                     document.getElementById('pinterest').value = data.pinterest || '';
+
+                    document.getElementById('feature1Title').value = data.feature1_title || 'Frete grátis';
+                    document.getElementById('feature1Desc').value = data.feature1_desc || 'Em compras acima de R$299 para todo o Brasil';
+                    document.getElementById('feature2Title').value = data.feature2_title || 'Parcelamento';
+                    document.getElementById('feature2Desc').value = data.feature2_desc || 'Em até 10x sem juros no cartão de crédito';
+                    document.getElementById('feature3Title').value = data.feature3_title || 'Troca facilitada';
+                    document.getElementById('feature3Desc').value = data.feature3_desc || 'Primeira troca grátis em até 30 dias';
+                    document.getElementById('feature4Title').value = data.feature4_title || 'Qualidade premium';
+                    document.getElementById('feature4Desc').value = data.feature4_desc || 'Peças exclusivas, pensadas para durar';
                 }
             } catch (error) {
                 console.error('Erro ao carregar configurações:', error);
@@ -2774,6 +2837,31 @@
                 await apiFetch('/api/admin/site-config', { method: 'PUT', body: JSON.stringify(config) });
 
                 alertDiv.innerHTML = '<div class="alert alert-success">✓ Hero Section salva com sucesso!</div>';
+                setTimeout(() => alertDiv.innerHTML = '', 3000);
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function saveBeneficios(e) {
+            e.preventDefault();
+            const alertDiv = document.getElementById('alertBeneficios');
+
+            const config = {
+                feature1_title: document.getElementById('feature1Title').value,
+                feature1_desc: document.getElementById('feature1Desc').value,
+                feature2_title: document.getElementById('feature2Title').value,
+                feature2_desc: document.getElementById('feature2Desc').value,
+                feature3_title: document.getElementById('feature3Title').value,
+                feature3_desc: document.getElementById('feature3Desc').value,
+                feature4_title: document.getElementById('feature4Title').value,
+                feature4_desc: document.getElementById('feature4Desc').value
+            };
+
+            try {
+                await apiFetch('/api/admin/site-config', { method: 'PUT', body: JSON.stringify(config) });
+
+                alertDiv.innerHTML = '<div class="alert alert-success">✓ Benefícios salvos com sucesso!</div>';
                 setTimeout(() => alertDiv.innerHTML = '', 3000);
             } catch (error) {
                 alertDiv.innerHTML = `<div class="alert alert-error">Erro: ${error.message}</div>`;

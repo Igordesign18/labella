@@ -455,6 +455,8 @@ app.put('/api/admin/site-config', requireAdmin, (req, res) => {
         'store_name', 'promo_banner', 'free_shipping_value', 'newsletter_discount',
         'hero_title_1', 'hero_title_2', 'hero_subtitle', 'hero_button', 'hero_image',
         'feature_video_url', 'feature_video_title',
+        'feature1_title', 'feature1_desc', 'feature2_title', 'feature2_desc',
+        'feature3_title', 'feature3_desc', 'feature4_title', 'feature4_desc',
         'color_primary', 'color_secondary', 'color_cta', 'theme_mode',
         'whatsapp', 'phone', 'email', 'city', 'state', 'working_hours',
         'facebook', 'instagram', 'pinterest'

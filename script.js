@@ -192,6 +192,15 @@ async function loadSiteColorsAndConfig() {
       if (data.hero_button) document.getElementById("heroButton").textContent = data.hero_button
       if (data.hero_image) document.getElementById("heroImage").src = data.hero_image
 
+      if (data.feature1_title) document.getElementById("feature1Title").textContent = data.feature1_title
+      if (data.feature1_desc) document.getElementById("feature1Desc").textContent = data.feature1_desc
+      if (data.feature2_title) document.getElementById("feature2Title").textContent = data.feature2_title
+      if (data.feature2_desc) document.getElementById("feature2Desc").textContent = data.feature2_desc
+      if (data.feature3_title) document.getElementById("feature3Title").textContent = data.feature3_title
+      if (data.feature3_desc) document.getElementById("feature3Desc").textContent = data.feature3_desc
+      if (data.feature4_title) document.getElementById("feature4Title").textContent = data.feature4_title
+      if (data.feature4_desc) document.getElementById("feature4Desc").textContent = data.feature4_desc
+
       const videoSection = document.getElementById("featureVideoSection")
       if (videoSection) {
         if (data.feature_video_url) {
