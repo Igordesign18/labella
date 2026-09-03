@@ -4,6 +4,8 @@ const productColors = {}
 let categories = []
 let allProducts = []
 let currentCategory = "promocoes"
+let lastProductsSnapshot = null
+let productImageIntervals = []
 
 // Declare lucide variable before using it
 const lucide = window.lucide
@@ -93,7 +95,14 @@ async function loadCategories() {
 
       data.forEach((category) => {
         const li = document.createElement("li")
-        li.innerHTML = `<a href="#${category.slug}">${category.name}</a>`
+        const link = document.createElement("a")
+        link.href = "#novidades"
+        link.textContent = category.name
+        link.addEventListener("click", (e) => {
+          e.preventDefault()
+          selectCategory(String(category.id))
+        })
+        li.appendChild(link)
         navContainer.appendChild(li)
       })
 
@@ -114,16 +123,37 @@ async function loadCategories() {
       // Adicionar event listeners aos novos botões
       document.querySelectorAll(".category-btn").forEach((btn) => {
         btn.addEventListener("click", function () {
-          document.querySelectorAll(".category-btn").forEach((b) => b.classList.remove("active"))
-          this.classList.add("active")
-          const category = this.getAttribute("data-category")
-          filterProductsByCategory(category)
+          selectCategory(this.getAttribute("data-category"))
         })
       })
     }
   } catch (error) {
     console.error("Erro ao carregar categorias:", error)
   }
+}
+
+// Filtra por categoria, sincroniza o botão ativo e rola até os resultados.
+// Antes, clicar numa categoria (pelo menu de cima ou pelos botões) não levava
+// o usuário até os produtos filtrados — o menu de cima nem funcionava (o link
+// apontava para uma âncora que não existia) e os botões filtravam sem rolar,
+// então quem clicava ficava "perdido" na página.
+function selectCategory(category) {
+  document.querySelectorAll(".category-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-category") === category)
+  })
+  filterProductsByCategory(category)
+  scrollToProductsSection()
+}
+
+function scrollToProductsSection() {
+  const section = document.getElementById("novidades")
+  if (!section) return
+
+  const nav = document.getElementById("siteNav")
+  const navHeight = nav ? nav.offsetHeight : 0
+  const top = section.getBoundingClientRect().top + window.scrollY - navHeight - 16
+
+  window.scrollTo({ top, behavior: "smooth" })
 }
 
 async function loadSiteColorsAndConfig() {
@@ -278,6 +308,16 @@ async function loadProducts() {
       return
     }
 
+    // A cada 30s o site busca os produtos de novo para refletir mudanças feitas
+    // no painel. Antes disso recriava a grade inteira sempre, mesmo sem nada
+    // ter mudado — isso causava o "piscar" da página. Agora só redesenha a
+    // grade quando os dados realmente mudaram.
+    const snapshot = JSON.stringify(products)
+    if (snapshot === lastProductsSnapshot) {
+      return
+    }
+    lastProductsSnapshot = snapshot
+
     allProducts = products
     filterProductsByCategory(currentCategory)
   } catch (error) {
@@ -341,6 +381,12 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 function displayProducts(products, container) {
+  // Zera os intervalos de troca automática de imagem da renderização anterior,
+  // senão eles continuam rodando em segundo plano mesmo depois que os cards
+  // antigos são substituídos (vazamento de memória + processamento à toa).
+  productImageIntervals.forEach(clearInterval)
+  productImageIntervals = []
+
   if (!products || products.length === 0) {
     container.innerHTML = `
             <div class="loading-state">
@@ -382,15 +428,35 @@ function displayProducts(products, container) {
       colorsHtml += "</div></div>"
     }
 
+    const hasSecondImage = !!product.image_url_2
+    const imageDotsHtml = hasSecondImage
+      ? `
+                <div class="product-image-dots" onclick="event.stopPropagation()">
+                    <button type="button" class="product-image-dot active" onclick="switchProductImage(this, '${product.image_url}')" aria-label="Foto 1"></button>
+                    <button type="button" class="product-image-dot" onclick="switchProductImage(this, '${product.image_url_2}')" aria-label="Foto 2"></button>
+                </div>
+            `
+      : ""
+
+    const sizeHtml = product.size
+      ? `
+                <div class="product-size">
+                    <span class="product-size-label">Tamanho:</span> ${product.size}
+                </div>
+            `
+      : ""
+
     card.innerHTML = `
-            <div class="product-image" onclick="openFullscreen('${product.image_url}')">
+            <div class="product-image" onclick="openFullscreen(this.querySelector('img').src)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
                 <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
                 ${product.video_url ? `<button type="button" class="video-badge" onclick="event.stopPropagation(); openProductVideo('${product.video_url}')" title="Assistir vídeo"><i data-lucide="play" style="width: 16px; height: 16px;"></i></button>` : ""}
+                ${imageDotsHtml}
             </div>
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
+                ${sizeHtml}
                 ${colorsHtml}
                 <div class="price-container">
                     <span class="old-price">R$ ${Number.parseFloat(product.old_price).toFixed(2).replace(".", ",")}</span>
@@ -414,12 +480,84 @@ function displayProducts(products, container) {
   container.innerHTML = ""
   container.appendChild(grid)
 
+  container.querySelectorAll(".product-image[data-images]").forEach((imageWrapper) => {
+    startProductImageCycle(imageWrapper)
+  })
+
   lucide.createIcons()
   
   // Initialize scroll reveal for new products
   setTimeout(() => {
     initProductScrollReveal()()
   }, 100)
+}
+
+// Troca automaticamente entre as fotos do produto (quando há uma segunda foto
+// cadastrada), do mesmo jeito que o fundo do hero já fazia. Pausa quando o
+// mouse está em cima do card, pra não atrapalhar quem está olhando a foto.
+function startProductImageCycle(imageWrapper) {
+  let images = []
+  try {
+    images = JSON.parse(imageWrapper.dataset.images || "[]")
+  } catch (error) {
+    images = []
+  }
+  if (images.length < 2) return
+
+  imageWrapper.dataset.currentIndex = "0"
+
+  function tick() {
+    const current = Number(imageWrapper.dataset.currentIndex || "0")
+    const next = (current + 1) % images.length
+    imageWrapper.dataset.currentIndex = String(next)
+
+    const img = imageWrapper.querySelector("img")
+    if (img) {
+      img.style.opacity = "0"
+      setTimeout(() => {
+        img.src = images[next]
+        img.style.opacity = "1"
+      }, 200)
+    }
+
+    imageWrapper.querySelectorAll(".product-image-dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === next)
+    })
+  }
+
+  function start() {
+    stopProductImageCycle(imageWrapper)
+    const intervalId = setInterval(tick, 3500)
+    imageWrapper.dataset.cycleId = String(intervalId)
+    productImageIntervals.push(intervalId)
+  }
+
+  imageWrapper.addEventListener("mouseenter", () => stopProductImageCycle(imageWrapper))
+  imageWrapper.addEventListener("mouseleave", start)
+
+  start()
+}
+
+function stopProductImageCycle(imageWrapper) {
+  const id = Number(imageWrapper.dataset.cycleId || "0")
+  if (id) {
+    clearInterval(id)
+    productImageIntervals = productImageIntervals.filter((existingId) => existingId !== id)
+    imageWrapper.dataset.cycleId = ""
+  }
+}
+
+function switchProductImage(dotEl, imageUrl) {
+  const imageWrapper = dotEl.closest(".product-image")
+  if (!imageWrapper) return
+
+  const img = imageWrapper.querySelector("img")
+  if (img) img.src = imageUrl
+
+  const dots = Array.from(imageWrapper.querySelectorAll(".product-image-dot"))
+  dots.forEach((dot) => dot.classList.remove("active"))
+  dotEl.classList.add("active")
+  imageWrapper.dataset.currentIndex = String(dots.indexOf(dotEl))
 }
 
 function selectColor(element, productId, colorName, colorHex) {

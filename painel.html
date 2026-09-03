@@ -1345,6 +1345,25 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Segunda Imagem do Produto (opcional, máx. 2 fotos)</label>
+                    <div class="image-upload-container" id="productImage2Upload" onclick="document.getElementById('productImage2Input').click()">
+                        <input type="file" id="productImage2Input" accept="image/*" style="display: none;" onchange="handleProductImage2Upload(event)">
+                        <i data-lucide="upload" class="upload-icon" style="width: 48px; height: 48px;"></i>
+                        <div class="upload-text">Clique para fazer upload</div>
+                        <div class="upload-hint">PNG, JPG até 5MB</div>
+                    </div>
+                    <div id="productImage2Preview" class="image-preview-container" style="display: none;">
+                        <img id="productImage2PreviewImg" class="image-preview">
+                        <button type="button" class="remove-image-btn" onclick="removeProductImage2()">×</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tamanho(s) Disponíveis (opcional)</label>
+                    <input type="text" id="productSize" placeholder="Ex: P, M, G, GG">
+                </div>
+
+                <div class="form-group">
                     <label>Vídeo do Produto (opcional)</label>
                     <div class="image-upload-container" id="productVideoUpload" onclick="document.getElementById('productVideoInput').click()">
                         <input type="file" id="productVideoInput" accept="video/*" style="display: none;" onchange="handleProductVideoUpload(event)">
@@ -1477,6 +1496,7 @@
         let currentCategoryEditId = null;
         let currentBannerEditId = null;
         let currentProductImageUrl = null;
+        let currentProductImageUrl2 = null;
         let currentProductVideoUrl = null;
         let currentBannerImageUrl = null;
         let currentHeroImageUrl = null;
@@ -2465,6 +2485,46 @@
             document.getElementById('productImageInput').value = '';
         }
 
+        async function handleProductImage2Upload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Imagem muito grande! Máximo 5MB');
+                return;
+            }
+
+            const container = document.getElementById('productImage2Upload');
+            container.style.opacity = '0.6';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const { url } = await apiFetch('/api/admin/upload?type=product', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                currentProductImageUrl2 = url;
+
+                document.getElementById('productImage2PreviewImg').src = url;
+                document.getElementById('productImage2Preview').style.display = 'block';
+                container.style.display = 'none';
+
+            } catch (error) {
+                alert('Erro ao enviar imagem: ' + error.message);
+                container.style.opacity = '1';
+            }
+        }
+
+        function removeProductImage2() {
+            currentProductImageUrl2 = null;
+            document.getElementById('productImage2Preview').style.display = 'none';
+            document.getElementById('productImage2Upload').style.display = 'block';
+            document.getElementById('productImage2Input').value = '';
+        }
+
         async function handleProductVideoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2825,6 +2885,10 @@
                                     <i data-lucide="edit-2" style="width: 16px;"></i>
                                     Editar
                                 </button>
+                                <button type="button" class="btn btn-secondary" onclick="duplicateProduct('${product.id}')" style="flex: 1;" title="Criar uma cópia deste produto">
+                                    <i data-lucide="copy" style="width: 16px;"></i>
+                                    Duplicar
+                                </button>
                                 <button type="button" class="btn btn-danger" onclick="deleteProduct('${product.id}')" style="flex: 1;">
                                     <i data-lucide="trash-2" style="width: 16px;"></i>
                                     Excluir
@@ -2844,6 +2908,7 @@
         function openAddModal() {
             currentEditId = null;
             currentProductImageUrl = null;
+            currentProductImageUrl2 = null;
             currentProductVideoUrl = null;
             productColorsTemp = [];
             document.getElementById('modalTitle').textContent = 'Adicionar Produto';
@@ -2852,6 +2917,8 @@
             document.getElementById('soldOut').checked = false;
             document.getElementById('productImagePreview').style.display = 'none';
             document.getElementById('productImageUpload').style.display = 'block';
+            document.getElementById('productImage2Preview').style.display = 'none';
+            document.getElementById('productImage2Upload').style.display = 'block';
             document.getElementById('productVideoPreview').style.display = 'none';
             document.getElementById('productVideoUpload').style.display = 'block';
             document.getElementById('productColorsList').style.display = 'none';
@@ -2874,12 +2941,23 @@
                 document.getElementById('newPrice').value = data.new_price;
                 document.getElementById('discount').value = data.discount_percentage;
                 document.getElementById('soldOut').checked = data.sold_out || false;
+                document.getElementById('productSize').value = data.size || '';
 
                 if (data.image_url) {
                     currentProductImageUrl = data.image_url;
                     document.getElementById('productImagePreviewImg').src = data.image_url;
                     document.getElementById('productImagePreview').style.display = 'block';
                     document.getElementById('productImageUpload').style.display = 'none';
+                }
+
+                currentProductImageUrl2 = null;
+                document.getElementById('productImage2Preview').style.display = 'none';
+                document.getElementById('productImage2Upload').style.display = 'block';
+                if (data.image_url_2) {
+                    currentProductImageUrl2 = data.image_url_2;
+                    document.getElementById('productImage2PreviewImg').src = data.image_url_2;
+                    document.getElementById('productImage2Preview').style.display = 'block';
+                    document.getElementById('productImage2Upload').style.display = 'none';
                 }
 
                 currentProductVideoUrl = null;
@@ -2904,6 +2982,16 @@
                 lucide.createIcons();
             } catch (error) {
                 alert('Erro ao carregar produto: ' + error.message);
+            }
+        }
+
+        async function duplicateProduct(id) {
+            try {
+                await apiFetch(`/api/admin/products/${id}/duplicate`, { method: 'POST' });
+                loadProducts();
+                reloadPreview();
+            } catch (error) {
+                alert('Erro ao duplicar produto: ' + error.message);
             }
         }
 
@@ -2934,11 +3022,13 @@
                 name: document.getElementById('productName').value,
                 category_id: document.getElementById('productCategory').value || null,
                 image_url: currentProductImageUrl,
+                image_url_2: currentProductImageUrl2,
                 video_url: currentProductVideoUrl,
                 old_price: parseFloat(document.getElementById('oldPrice').value),
                 new_price: parseFloat(document.getElementById('newPrice').value),
                 discount_percentage: parseInt(document.getElementById('discount').value),
                 sold_out: document.getElementById('soldOut').checked,
+                size: document.getElementById('productSize').value.trim() || null,
                 colors: productColorsTemp.map(color => ({ name: color.name, hex: color.hex }))
             };
 
@@ -2968,13 +3058,14 @@
             document.getElementById('productModal').classList.remove('active');
             document.getElementById('productForm').reset();
             removeProductImage();
+            removeProductImage2();
             removeProductVideo();
             productColorsTemp = [];
             currentEditId = null;
         }
 
         // Drag and drop upload handling
-        ['productImageUpload', 'heroImageUpload'].forEach(id => {
+        ['productImageUpload', 'productImage2Upload', 'heroImageUpload'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('dragover', (e) => {
@@ -2992,9 +3083,12 @@
                     
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
-                        const input = id === 'productImageUpload' ? 
-                            document.getElementById('productImageInput') : 
-                            document.getElementById('heroImageInput');
+                        const inputIdMap = {
+                            productImageUpload: 'productImageInput',
+                            productImage2Upload: 'productImage2Input',
+                            heroImageUpload: 'heroImageInput'
+                        };
+                        const input = document.getElementById(inputIdMap[id]);
                         
                         const dataTransfer = new DataTransfer();
                         dataTransfer.items.add(files[0]);

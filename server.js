@@ -4,6 +4,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
+const sharp = require('sharp');
 const { db, UPLOADS_DIR } = require('./db');
 
 const app = express();
@@ -34,6 +35,36 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+// ---------- Otimização de imagens ----------
+// Redimensiona (máx. 1600px de largura) e recomprime a imagem enviada.
+// Isso é a principal causa de lentidão: fotos de celular chegam com 3-5MB
+// e eram salvas sem nenhum tratamento, sendo baixadas inteiras pelos
+// visitantes do site. Se a otimização falhar por algum motivo, o arquivo
+// original enviado é mantido (nunca quebra o upload).
+async function optimizeImage(filePath) {
+    try {
+        const buffer = await sharp(filePath).rotate().resize({
+            width: 1600,
+            withoutEnlargement: true
+        }).toBuffer();
+
+        const ext = path.extname(filePath).toLowerCase();
+        let pipeline = sharp(buffer);
+        if (ext === '.png') {
+            pipeline = pipeline.png({ quality: 82, compressionLevel: 8 });
+        } else if (ext === '.webp') {
+            pipeline = pipeline.webp({ quality: 82 });
+        } else {
+            pipeline = pipeline.jpeg({ quality: 82, mozjpeg: true });
+        }
+
+        const optimized = await pipeline.toBuffer();
+        fs.writeFileSync(filePath, optimized);
+    } catch (err) {
+        console.error('Falha ao otimizar imagem (mantendo original):', err.message);
+    }
+}
+
 // ---------- Upload de imagens ----------
 const IMAGE_UPLOAD_FOLDERS = { hero: 'hero', banner: 'banners' };
 const storage = multer.diskStorage({
@@ -60,9 +91,10 @@ const upload = multer({
 });
 
 app.post('/api/admin/upload', requireAdmin, (req, res) => {
-    upload.single('image')(req, res, (err) => {
+    upload.single('image')(req, res, async (err) => {
         if (err) return res.status(400).json({ error: err.message });
         if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+        await optimizeImage(req.file.path);
         const folder = IMAGE_UPLOAD_FOLDERS[req.query.type] || 'products';
         const url = `/uploads/${folder}/${req.file.filename}`;
         res.json({ url });
@@ -270,8 +302,8 @@ app.get('/api/admin/products/:id', requireAdmin, (req, res) => {
 
 app.post('/api/admin/products', requireAdmin, (req, res) => {
     const {
-        name, category_id, image_url, video_url, old_price, new_price,
-        discount_percentage, sold_out, colors
+        name, category_id, image_url, image_url_2, video_url, old_price, new_price,
+        discount_percentage, sold_out, size, colors
     } = req.body;
 
     if (!name || !image_url) {
@@ -284,12 +316,12 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
     const insertProduct = db.transaction(() => {
         const info = db.prepare(`
             INSERT INTO products
-                (name, category_id, image_url, video_url, old_price, new_price, discount_percentage, sold_out, position, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         `).run(
-            name, category_id || null, image_url, video_url || null,
+            name, category_id || null, image_url, image_url_2 || null, video_url || null,
             old_price || 0, new_price || 0, discount_percentage || 0,
-            sold_out ? 1 : 0, position
+            sold_out ? 1 : 0, size || null, position
         );
 
         const productId = info.lastInsertRowid;
@@ -315,25 +347,27 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Produto não encontrado' });
 
     const {
-        name, category_id, image_url, video_url, old_price, new_price,
-        discount_percentage, sold_out, position, colors
+        name, category_id, image_url, image_url_2, video_url, old_price, new_price,
+        discount_percentage, sold_out, size, position, colors
     } = req.body;
 
     const updateProduct = db.transaction(() => {
         db.prepare(`
             UPDATE products SET
-                name = ?, category_id = ?, image_url = ?, video_url = ?, old_price = ?, new_price = ?,
-                discount_percentage = ?, sold_out = ?, position = ?, updated_at = datetime('now')
+                name = ?, category_id = ?, image_url = ?, image_url_2 = ?, video_url = ?, old_price = ?, new_price = ?,
+                discount_percentage = ?, sold_out = ?, size = ?, position = ?, updated_at = datetime('now')
             WHERE id = ?
         `).run(
             name ?? existing.name,
             category_id !== undefined ? category_id : existing.category_id,
             image_url ?? existing.image_url,
+            image_url_2 !== undefined ? image_url_2 : existing.image_url_2,
             video_url !== undefined ? video_url : existing.video_url,
             old_price !== undefined ? old_price : existing.old_price,
             new_price !== undefined ? new_price : existing.new_price,
             discount_percentage !== undefined ? discount_percentage : existing.discount_percentage,
             sold_out !== undefined ? (sold_out ? 1 : 0) : existing.sold_out,
+            size !== undefined ? size : existing.size,
             position !== undefined ? position : existing.position,
             req.params.id
         );
@@ -360,6 +394,43 @@ app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
     });
     del();
     res.json({ ok: true });
+});
+
+// Duplicar produto (copia todos os campos, imagens e cores; entra como "Esgotado: não" no fim da lista)
+app.post('/api/admin/products/:id/duplicate', requireAdmin, (req, res) => {
+    const original = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    if (!original) return res.status(404).json({ error: 'Produto não encontrado' });
+
+    const duplicate = db.transaction(() => {
+        const maxPos = db.prepare('SELECT MAX(position) as maxPos FROM products').get();
+        const position = (maxPos.maxPos || 0) + 1;
+
+        const info = db.prepare(`
+            INSERT INTO products
+                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `).run(
+            `${original.name} (cópia)`, original.category_id, original.image_url, original.image_url_2,
+            original.video_url, original.old_price, original.new_price, original.discount_percentage,
+            original.sold_out, original.size, position
+        );
+
+        const newProductId = info.lastInsertRowid;
+        const colors = getColorsForProduct(original.id);
+        if (colors.length > 0) {
+            const insertColor = db.prepare(
+                'INSERT INTO product_colors (product_id, color_name, color_hex) VALUES (?, ?, ?)'
+            );
+            colors.forEach(c => insertColor.run(newProductId, c.color_name, c.color_hex));
+        }
+
+        return newProductId;
+    });
+
+    const newProductId = duplicate();
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(newProductId);
+    product.colors = getColorsForProduct(newProductId);
+    res.json(product);
 });
 
 // Configurações do site (upsert parcial, mantendo a linha única)
@@ -392,7 +463,7 @@ app.put('/api/admin/site-config', requireAdmin, (req, res) => {
 });
 
 // ---------- Arquivos estáticos ----------
-app.use('/uploads', express.static(UPLOADS_DIR));
+app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '30d', immutable: true }));
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 
 app.get('/painel', (req, res) => {

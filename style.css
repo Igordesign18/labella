@@ -732,7 +732,7 @@ body.loaded .hero-text .cta-button {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 0.6s ease, opacity 0.4s ease;
 }
 
 .product-card:hover .product-image img {
@@ -797,6 +797,43 @@ body.loaded .hero-text .cta-button {
 
 .product-card.sold-out .product-image img {
   filter: grayscale(100%) opacity(0.55);
+}
+
+.product-image-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.product-image-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(251, 247, 241, 0.85);
+  background: rgba(36, 31, 28, 0.4);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.product-image-dot.active {
+  background: #fbf7f1;
+  transform: scale(1.15);
+}
+
+.product-size {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+
+.product-size-label {
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .product-info {

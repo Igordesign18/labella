@@ -104,6 +104,8 @@ function ensureColumn(table, column, definition) {
 }
 
 ensureColumn('products', 'video_url', 'TEXT');
+ensureColumn('products', 'image_url_2', 'TEXT');
+ensureColumn('products', 'size', 'TEXT');
 ensureColumn('site_config', 'feature_video_url', 'TEXT');
 ensureColumn('site_config', 'feature_video_title', 'TEXT');
 ensureColumn('site_config', 'theme_mode', 'TEXT');
