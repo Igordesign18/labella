@@ -957,9 +957,10 @@
                 </h2>
                 <p style="color: var(--text-secondary, #666); margin-bottom: 16px; font-size: 14px;">
                     Fotos de produtos cadastradas antes da otimização automática existir continuam pesadas
-                    e deixam o carregamento do site mais lento. Clique abaixo para comprimir todas as fotos
-                    já enviadas de uma vez (isso não apaga nem substitui nenhum produto, só deixa as imagens
-                    mais leves).
+                    e deixam o carregamento do site mais lento — isso inclui fotos tiradas direto da câmera
+                    do iPhone (.HEIC), que agora também são convertidas para um formato mais leve e compatível
+                    com todos os navegadores. Clique abaixo para comprimir todas as fotos já enviadas de uma vez
+                    (isso não apaga nem substitui nenhum produto, só deixa as imagens mais leves).
                 </p>
                 <div id="alertOtimizar"></div>
                 <button type="button" class="btn btn-primary" id="btnOtimizarImagens" onclick="otimizarImagensExistentes()">
@@ -2899,6 +2900,7 @@
 
                 alertDiv.innerHTML = `<div class="alert alert-success">
                     ✓ ${result.processed} imagem(ns) otimizada(s): de ${result.sizeBeforeMB}MB para ${result.sizeAfterMB}MB.
+                    ${result.renamed > 0 ? `${result.renamed} foto(s) .HEIC do iPhone foram convertidas para .jpg.` : ''}
                     ${result.skipped > 0 ? `(${result.skipped} não puderam ser otimizadas e foram mantidas como estavam.)` : ''}
                 </div>`;
             } catch (error) {

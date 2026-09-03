@@ -16,6 +16,13 @@ try {
     console.error('sharp indisponível — uploads serão salvos sem otimização de imagem:', err.message);
 }
 
+let heicConvert = null;
+try {
+    heicConvert = require('heic-convert');
+} catch (err) {
+    console.error('heic-convert indisponível — fotos .HEIC do iPhone não serão convertidas:', err.message);
+}
+
 const { db, UPLOADS_DIR } = require('./db');
 
 const app = express();
@@ -54,27 +61,51 @@ function requireAdmin(req, res, next) {
 // original enviado é mantido (nunca quebra o upload).
 async function optimizeImage(filePath) {
     if (!sharp) return null; // sharp não carregou nesta plataforma — mantém o arquivo original
+
+    const ext = path.extname(filePath).toLowerCase();
+    const isHeic = ext === '.heic' || ext === '.heif';
+
     try {
         const sizeBefore = fs.statSync(filePath).size;
+        let inputBuffer = fs.readFileSync(filePath);
+        let finalPath = filePath;
 
-        const buffer = await sharp(filePath).rotate().resize({
+        // Fotos .HEIC/.HEIF (padrão da câmera do iPhone) usam uma compressão
+        // com restrição de patente que o sharp não consegue abrir sozinho.
+        // Por isso, primeiro convertemos para JPEG com uma biblioteca à parte,
+        // e só depois passamos pelo redimensionamento/compressão normal.
+        if (isHeic) {
+            if (!heicConvert) {
+                console.error('Foto .HEIC recebida, mas heic-convert não está disponível — mantendo original.');
+                return null;
+            }
+            inputBuffer = Buffer.from(await heicConvert({ buffer: inputBuffer, format: 'JPEG', quality: 0.9 }));
+            finalPath = filePath.slice(0, -ext.length) + '.jpg';
+        }
+
+        const resizedBuffer = await sharp(inputBuffer).rotate().resize({
             width: 1600,
             withoutEnlargement: true
         }).toBuffer();
 
-        const ext = path.extname(filePath).toLowerCase();
-        let pipeline = sharp(buffer);
-        if (ext === '.png') {
+        const finalExt = path.extname(finalPath).toLowerCase();
+        let pipeline = sharp(resizedBuffer);
+        if (finalExt === '.png') {
             pipeline = pipeline.png({ quality: 82, compressionLevel: 8 });
-        } else if (ext === '.webp') {
+        } else if (finalExt === '.webp') {
             pipeline = pipeline.webp({ quality: 82 });
         } else {
             pipeline = pipeline.jpeg({ quality: 82, mozjpeg: true });
         }
 
         const optimized = await pipeline.toBuffer();
-        fs.writeFileSync(filePath, optimized);
-        return { before: sizeBefore, after: optimized.length };
+        fs.writeFileSync(finalPath, optimized);
+
+        if (finalPath !== filePath) {
+            fs.unlinkSync(filePath); // remove o .heic original, já convertido
+        }
+
+        return { before: sizeBefore, after: optimized.length, newPath: finalPath };
     } catch (err) {
         console.error('Falha ao otimizar imagem (mantendo original):', err.message);
         return null;
@@ -110,9 +141,12 @@ app.post('/api/admin/upload', requireAdmin, (req, res) => {
     upload.single('image')(req, res, async (err) => {
         if (err) return res.status(400).json({ error: err.message });
         if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-        await optimizeImage(req.file.path);
+
+        const result = await optimizeImage(req.file.path);
         const folder = IMAGE_UPLOAD_FOLDERS[req.query.type] || 'products';
-        const url = `/uploads/${folder}/${req.file.filename}`;
+        // Se era uma foto .HEIC do iPhone, o arquivo final é .jpg (nome diferente do original)
+        const finalFilename = result && result.newPath ? path.basename(result.newPath) : req.file.filename;
+        const url = `/uploads/${folder}/${finalFilename}`;
         res.json({ url });
     });
 });
@@ -487,10 +521,11 @@ app.put('/api/admin/site-config', requireAdmin, (req, res) => {
 app.post('/api/admin/optimize-existing-images', requireAdmin, async (req, res) => {
     if (!sharp) return res.status(400).json({ error: 'Otimização de imagem indisponível neste servidor' });
 
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
     const foldersToScan = ['products', 'hero', 'banners'];
     let processed = 0;
     let skipped = 0;
+    let renamed = 0;
     let sizeBefore = 0;
     let sizeAfter = 0;
 
@@ -509,6 +544,19 @@ app.post('/api/admin/optimize-existing-images', requireAdmin, async (req, res) =
                 processed++;
                 sizeBefore += result.before;
                 sizeAfter += result.after;
+
+                // Se a foto era .HEIC/.HEIF, o arquivo final ficou com outro
+                // nome (.jpg) — sem isso, o produto ficaria apontando pra um
+                // arquivo que não existe mais.
+                if (result.newPath && result.newPath !== filePath) {
+                    const oldUrl = `/uploads/${folder}/${file}`;
+                    const newUrl = `/uploads/${folder}/${path.basename(result.newPath)}`;
+                    db.prepare('UPDATE products SET image_url = ? WHERE image_url = ?').run(newUrl, oldUrl);
+                    db.prepare('UPDATE products SET image_url_2 = ? WHERE image_url_2 = ?').run(newUrl, oldUrl);
+                    db.prepare('UPDATE site_config SET hero_image = ? WHERE hero_image = ?').run(newUrl, oldUrl);
+                    db.prepare('UPDATE banners SET image_url = ? WHERE image_url = ?').run(newUrl, oldUrl);
+                    renamed++;
+                }
             } else {
                 skipped++;
             }
@@ -518,6 +566,7 @@ app.post('/api/admin/optimize-existing-images', requireAdmin, async (req, res) =
     res.json({
         processed,
         skipped,
+        renamed,
         sizeBeforeMB: (sizeBefore / (1024 * 1024)).toFixed(1),
         sizeAfterMB: (sizeAfter / (1024 * 1024)).toFixed(1)
     });

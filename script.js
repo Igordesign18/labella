@@ -3,7 +3,7 @@ let siteConfig = {}
 const productColors = {}
 let categories = []
 let allProducts = []
-let currentCategory = "promocoes"
+let currentCategory = "all"
 let lastProductsSnapshot = null
 let productImageIntervals = []
 
@@ -109,7 +109,7 @@ async function loadCategories() {
       // Carregar nos botões de filtro
       const filterContainer = document.getElementById("categoryFilters")
       filterContainer.innerHTML =
-        '<button class="category-btn active" data-category="promocoes">Promoções</button><button class="category-btn" data-category="all">Todos</button>'
+        '<button class="category-btn" data-category="promocoes">Promoções</button><button class="category-btn active" data-category="all">Todos</button>'
 
       data.forEach((category) => {
         const button = document.createElement("button")
@@ -1199,21 +1199,26 @@ function initAmbientBackground() {
 
   if (prefersReducedMotion) return // mantém as orbes paradas, sem animação
 
+  // Em celulares (touch), o mouse-parallax não faz sentido mesmo, e essa
+  // animação contínua (a cada quadro, para sempre) compete com o carregamento
+  // da página pelo processamento do aparelho — isso pesa bastante mais no
+  // Chrome do Android do que no Safari do iPhone. Por isso, em touch, as
+  // orbes ficam paradas (só o CSS, sem esse loop de JS).
+  if (isTouchDevice) return
+
   let mouseX = 0
   let mouseY = 0
   let targetX = 0
   let targetY = 0
 
-  if (!isTouchDevice) {
-    window.addEventListener(
-      "mousemove",
-      (e) => {
-        targetX = (e.clientX / window.innerWidth - 0.5) * 2 // -1 a 1
-        targetY = (e.clientY / window.innerHeight - 0.5) * 2
-      },
-      { passive: true },
-    )
-  }
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      targetX = (e.clientX / window.innerWidth - 0.5) * 2 // -1 a 1
+      targetY = (e.clientY / window.innerHeight - 0.5) * 2
+    },
+    { passive: true },
+  )
 
   let frame = 0
   function animateAmbient() {
