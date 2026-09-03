@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selá | Cristã</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -225,8 +227,15 @@
     <!-- Modal de imagem em tela cheia -->
     <div class="fullscreen-image-modal" id="fullscreenModal" onclick="closeFullscreen()">
         <button class="close-fullscreen" onclick="closeFullscreen()">×</button>
+        <button type="button" class="fullscreen-arrow prev" id="fullscreenPrev" onclick="event.stopPropagation(); fullscreenGoToPrev()" aria-label="Foto anterior">
+            <i data-lucide="chevron-left"></i>
+        </button>
         <img id="fullscreenImage" src="/images/Model.jpg" alt="Imagem em tela cheia">
         <video id="fullscreenVideo" style="display: none;" controls playsinline onclick="event.stopPropagation()"></video>
+        <button type="button" class="fullscreen-arrow next" id="fullscreenNext" onclick="event.stopPropagation(); fullscreenGoToNext()" aria-label="Próxima foto">
+            <i data-lucide="chevron-right"></i>
+        </button>
+        <div class="fullscreen-dots" id="fullscreenDots" onclick="event.stopPropagation()"></div>
     </div>
 
     <!-- Floating cart notification container -->
@@ -246,6 +255,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html>

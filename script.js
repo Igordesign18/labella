@@ -60,7 +60,7 @@ function initProductScrollReveal() {
       if (entry.isIntersecting) {
         setTimeout(() => {
           entry.target.classList.add('revealed')
-        }, index * 100) // Staggered animation
+        }, index * 40) // Staggered animation
       }
     })
   }, {
@@ -447,7 +447,7 @@ function displayProducts(products, container) {
       : ""
 
     card.innerHTML = `
-            <div class="product-image" onclick="openFullscreen(this.querySelector('img').src)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
+            <div class="product-image" onclick="openFullscreen(this)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
                 <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
@@ -758,24 +758,160 @@ function openWhatsApp() {
   window.open(`https://wa.me/${whatsappClean}?text=${message}`, "_blank")
 }
 
-function openFullscreen(imageUrl) {
-  event.stopPropagation()
+let fullscreenImages = []
+let fullscreenIndex = 0
+
+function openFullscreen(source) {
+  if (event) event.stopPropagation()
+
+  let images = []
+  if (typeof source === "string") {
+    images = [source]
+  } else if (source) {
+    try {
+      images = JSON.parse(source.dataset.images || "[]")
+    } catch (error) {
+      images = []
+    }
+    if (images.length === 0) {
+      const currentImg = source.querySelector("img")
+      if (currentImg) images = [currentImg.src]
+    }
+  }
+  if (images.length === 0) return
+
+  fullscreenImages = images
+
+  // Abre já na foto que estava sendo exibida no card (pode não ser a primeira,
+  // se a troca automática já tiver avançado pra segunda foto).
+  const currentImg = source && source.querySelector ? source.querySelector("img") : null
+  fullscreenIndex = currentImg ? Math.max(0, images.indexOf(currentImg.src)) : 0
+
   const video = document.getElementById("fullscreenVideo")
   video.pause()
   video.style.display = "none"
   video.src = ""
 
-  const img = document.getElementById("fullscreenImage")
-  img.style.display = "block"
-  img.src = imageUrl
+  document.getElementById("fullscreenImage").style.display = "block"
+  renderFullscreenImage()
 
   document.getElementById("fullscreenModal").classList.add("active")
 }
+
+function renderFullscreenImage() {
+  const img = document.getElementById("fullscreenImage")
+  img.style.transform = ""
+  img.classList.remove("dragging")
+  img.src = fullscreenImages[fullscreenIndex]
+
+  const hasMultiple = fullscreenImages.length > 1
+  const prevBtn = document.getElementById("fullscreenPrev")
+  const nextBtn = document.getElementById("fullscreenNext")
+  const dotsContainer = document.getElementById("fullscreenDots")
+
+  prevBtn.style.display = hasMultiple ? "flex" : "none"
+  nextBtn.style.display = hasMultiple ? "flex" : "none"
+
+  dotsContainer.innerHTML = ""
+  if (hasMultiple) {
+    fullscreenImages.forEach((_, i) => {
+      const dot = document.createElement("button")
+      dot.type = "button"
+      dot.className = "fullscreen-dot" + (i === fullscreenIndex ? " active" : "")
+      dot.setAttribute("aria-label", `Foto ${i + 1}`)
+      dot.onclick = () => {
+        fullscreenIndex = i
+        renderFullscreenImage()
+      }
+      dotsContainer.appendChild(dot)
+    })
+  }
+}
+
+function fullscreenGoToNext() {
+  if (fullscreenImages.length < 2) return
+  fullscreenIndex = (fullscreenIndex + 1) % fullscreenImages.length
+  renderFullscreenImage()
+}
+
+function fullscreenGoToPrev() {
+  if (fullscreenImages.length < 2) return
+  fullscreenIndex = (fullscreenIndex - 1 + fullscreenImages.length) % fullscreenImages.length
+  renderFullscreenImage()
+}
+
+// Arrastar (touch e mouse) na imagem em tela cheia pra trocar de foto.
+function initFullscreenSwipe() {
+  const img = document.getElementById("fullscreenImage")
+  if (!img) return
+
+  let startX = 0
+  let currentX = 0
+  let dragging = false
+
+  function dragStart(x) {
+    if (fullscreenImages.length < 2) return
+    dragging = true
+    startX = x
+    currentX = x
+    img.classList.add("dragging")
+  }
+
+  function dragMove(x) {
+    if (!dragging) return
+    currentX = x
+    img.style.transform = `translateX(${currentX - startX}px)`
+  }
+
+  function dragEnd() {
+    if (!dragging) return
+    dragging = false
+    img.classList.remove("dragging")
+
+    const delta = currentX - startX
+    const threshold = 60
+
+    if (delta > threshold) {
+      fullscreenGoToPrev()
+    } else if (delta < -threshold) {
+      fullscreenGoToNext()
+    } else {
+      img.style.transform = ""
+    }
+  }
+
+  img.addEventListener("touchstart", (e) => dragStart(e.touches[0].clientX), { passive: true })
+  img.addEventListener("touchmove", (e) => dragMove(e.touches[0].clientX), { passive: true })
+  img.addEventListener("touchend", dragEnd)
+
+  img.addEventListener("mousedown", (e) => {
+    e.preventDefault()
+    dragStart(e.clientX)
+  })
+  window.addEventListener("mousemove", (e) => dragMove(e.clientX))
+  window.addEventListener("mouseup", dragEnd)
+
+  img.addEventListener("click", (e) => e.stopPropagation())
+}
+
+document.addEventListener("DOMContentLoaded", initFullscreenSwipe)
+
+document.addEventListener("keydown", (e) => {
+  const modal = document.getElementById("fullscreenModal")
+  if (!modal || !modal.classList.contains("active")) return
+  if (e.key === "ArrowRight") fullscreenGoToNext()
+  if (e.key === "ArrowLeft") fullscreenGoToPrev()
+  if (e.key === "Escape") closeFullscreen()
+})
 
 function openProductVideo(videoUrl) {
   if (event) event.stopPropagation()
 
   document.getElementById("fullscreenImage").style.display = "none"
+  document.getElementById("fullscreenPrev").style.display = "none"
+  document.getElementById("fullscreenNext").style.display = "none"
+  document.getElementById("fullscreenDots").innerHTML = ""
+  fullscreenImages = []
 
   const video = document.getElementById("fullscreenVideo")
   video.style.display = "block"
@@ -792,7 +928,14 @@ function closeFullscreen() {
   const video = document.getElementById("fullscreenVideo")
   video.pause()
   video.style.display = "none"
-  document.getElementById("fullscreenImage").style.display = "block"
+
+  const img = document.getElementById("fullscreenImage")
+  img.style.display = "block"
+  img.style.transform = ""
+  img.classList.remove("dragging")
+
+  fullscreenImages = []
+  fullscreenIndex = 0
 }
 
 function showNotification(message) {
@@ -1100,11 +1243,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     carouselViewport.addEventListener("mouseleave", restartCarouselAutoplay)
   }
 
-  await loadCategories()
+  // Essas chamadas são independentes entre si, mas antes rodavam uma atrás da
+  // outra (esperando cada uma terminar pra só então começar a próxima), o que
+  // multiplicava à toa o tempo até os produtos aparecerem. Agora rodam em
+  // paralelo — só os produtos esperam as cores carregarem, porque precisam
+  // delas para mostrar as bolinhas de cor certas.
   loadSiteColorsAndConfig()
-  await loadProductColors()
-  await loadProducts()
   loadBanners()
+  await Promise.all([loadCategories(), loadProductColors()])
+  await loadProducts()
   lucide.createIcons()
 
   const urlParams = new URLSearchParams(window.location.search)
