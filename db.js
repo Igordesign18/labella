@@ -113,7 +113,7 @@ ensureColumn('site_config', 'theme_mode', 'TEXT');
 // Garante que sempre existe uma linha de configuração (linha única, como no site_config antigo).
 const configRow = db.prepare('SELECT id FROM site_config LIMIT 1').get();
 if (!configRow) {
-    db.prepare('INSERT INTO site_config (store_name) VALUES (?)').run('Labella Woman');
+    db.prepare('INSERT INTO site_config (store_name) VALUES (?)').run('Selá');
 }
 
 // Preenche o hero e o banner com o texto que já está publicado no site (index.html),

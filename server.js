@@ -486,5 +486,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Labella Woman rodando na porta ${PORT}`);
+    console.log(`Selá rodando na porta ${PORT}`);
 });

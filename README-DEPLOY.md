@@ -1,4 +1,4 @@
-# Deploy — Labella Woman (site + painel, sem Supabase)
+# Deploy — Selá (site + painel, sem Supabase)
 
 O Supabase foi completamente removido. Agora o site e o painel usam um
 backend próprio (Node/Express + SQLite), rodando dentro do mesmo container
@@ -21,7 +21,7 @@ labella/
 ```
 
 ## ⚠️ Antes de subir: imagens do site (hero/modelo)
-O site referencia `/images/LabellaWoman.jpg` e `/images/Model.jpg`, mas esses
+O site referencia `/images/Sela.jpg` e `/images/Model.jpg`, mas esses
 arquivos não vieram no material original. Coloque as duas imagens dentro da
 pasta `images/` antes de dar push, senão o hero e a imagem em tela cheia do
 site quebram.

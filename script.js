@@ -220,7 +220,7 @@ function updateFooterContact(data) {
   contactList.innerHTML = `
         <li class="footer-contact-item">
             <i data-lucide="mail"></i>
-            <span>${data.email || "contato@labellawoman.com.br"}</span>
+            <span>${data.email || "contato@sela.com.br"}</span>
         </li>
         <li class="footer-contact-item">
             <i data-lucide="phone"></i>
@@ -704,7 +704,7 @@ function closeCheckout() {
 }
 
 function finalizarPedidoWhatsApp() {
-  let message = "🛍️ *Meu Pedido - Labella Woman*\n\n"
+  let message = "🛍️ *Meu Pedido - Selá*\n\n"
   let total = 0
 
   cart.forEach((item, index) => {
@@ -740,7 +740,7 @@ function finalizarPedidoWhatsApp() {
 
 function shareProduct(product) {
   const productUrl = `${window.location.origin}${window.location.pathname}?produto=${product.id}`
-  const shareMessage = `Estou compartilhando esse produto da Labella Woman com 10% de desconto!\n\n${product.name}\n\n${productUrl}`
+  const shareMessage = `Estou compartilhando esse produto da Selá com 10% de desconto!\n\n${product.name}\n\n${productUrl}`
 
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
   const whatsappClean = whatsapp.replace(/\D/g, "")
@@ -754,7 +754,7 @@ function shareProduct(product) {
 function openWhatsApp() {
   const whatsapp = siteConfig.whatsapp || "+5511999999999"
   const whatsappClean = whatsapp.replace(/\D/g, "")
-  const message = encodeURIComponent("Olá! Gostaria de saber mais sobre os produtos da Labella Woman.")
+  const message = encodeURIComponent("Olá! Gostaria de saber mais sobre os produtos da Selá.")
   window.open(`https://wa.me/${whatsappClean}?text=${message}`, "_blank")
 }
 

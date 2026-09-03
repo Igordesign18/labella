@@ -1,7 +1,7 @@
 {
-  "name": "labella-woman",
+  "name": "sela",
   "version": "1.0.0",
-  "description": "Site + painel administrativo da Labella Woman (sem Supabase, backend próprio)",
+  "description": "Site + painel administrativo da Selá (sem Supabase, backend próprio)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
