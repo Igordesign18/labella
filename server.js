@@ -4,7 +4,18 @@ const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
-const sharp = require('sharp');
+
+// Carregamento defensivo do sharp: se o binário nativo dele não estiver
+// disponível nesta plataforma (ex.: arquitetura diferente no servidor de
+// produção), o site inteiro caía por causa disso. Agora, se falhar, o
+// servidor sobe normalmente e só a otimização de imagem fica desativada.
+let sharp = null;
+try {
+    sharp = require('sharp');
+} catch (err) {
+    console.error('sharp indisponível — uploads serão salvos sem otimização de imagem:', err.message);
+}
+
 const { db, UPLOADS_DIR } = require('./db');
 
 const app = express();
@@ -42,6 +53,7 @@ function requireAdmin(req, res, next) {
 // visitantes do site. Se a otimização falhar por algum motivo, o arquivo
 // original enviado é mantido (nunca quebra o upload).
 async function optimizeImage(filePath) {
+    if (!sharp) return; // sharp não carregou nesta plataforma — mantém o arquivo original
     try {
         const buffer = await sharp(filePath).rotate().resize({
             width: 1600,
