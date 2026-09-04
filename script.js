@@ -380,6 +380,13 @@ function renderProductCarousels(products, container) {
 
   container.innerHTML = ""
 
+  // Vitrine "Mais Vendidos" primeiro, com os produtos marcados como
+  // destaque no painel — só aparece se houver pelo menos um.
+  const bestsellers = products.filter((p) => p.is_bestseller)
+  if (bestsellers.length > 0) {
+    container.appendChild(buildCategorySection("bestsellers", "Mais Vendidos", bestsellers))
+  }
+
   // Um carrossel por categoria, na mesma ordem das categorias cadastradas no
   // painel. Produtos sem categoria (ou de uma categoria já excluída) entram
   // num carrossel "Outras peças" no final, se houver algum.
@@ -429,10 +436,14 @@ function buildCategorySection(categoryId, categoryName, categoryProducts) {
   section.className = "category-section"
   section.id = `category-${categoryId}`
 
+  const header = document.createElement("div")
+  header.className = "category-section-header"
+
   const title = document.createElement("h3")
   title.className = "category-section-title"
   title.textContent = categoryName
-  section.appendChild(title)
+  header.appendChild(title)
+  section.appendChild(header)
 
   const wrapper = document.createElement("div")
   wrapper.className = "category-carousel-wrapper"
@@ -462,6 +473,26 @@ function buildCategorySection(categoryId, categoryName, categoryProducts) {
   wrapper.appendChild(carousel)
   wrapper.appendChild(nextBtn)
   section.appendChild(wrapper)
+
+  // O botão "Ver mais" só faz sentido se sobrar produto escondido no
+  // carrossel — com poucas peças, tudo já aparece de uma vez.
+  if (categoryProducts.length > 2) {
+    let expanded = false
+    const seeMoreBtn = document.createElement("button")
+    seeMoreBtn.type = "button"
+    seeMoreBtn.className = "category-see-more"
+    seeMoreBtn.innerHTML = 'Ver mais <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>'
+    header.appendChild(seeMoreBtn)
+
+    seeMoreBtn.onclick = () => {
+      expanded = !expanded
+      section.classList.toggle("category-expanded", expanded)
+      seeMoreBtn.innerHTML = expanded
+        ? 'Ver menos <i data-lucide="chevron-up" style="width:16px;height:16px;"></i>'
+        : 'Ver mais <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>'
+      lucide.createIcons()
+    }
+  }
 
   return section
 }

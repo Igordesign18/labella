@@ -353,7 +353,7 @@ app.get('/api/admin/products/:id', requireAdmin, (req, res) => {
 app.post('/api/admin/products', requireAdmin, (req, res) => {
     const {
         name, category_id, image_url, image_url_2, video_url, old_price, new_price,
-        discount_percentage, sold_out, size, colors
+        discount_percentage, sold_out, size, is_bestseller, colors
     } = req.body;
 
     if (!name || !image_url) {
@@ -366,12 +366,12 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
     const insertProduct = db.transaction(() => {
         const info = db.prepare(`
             INSERT INTO products
-                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, position, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, is_bestseller, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         `).run(
             name, category_id || null, image_url, image_url_2 || null, video_url || null,
             old_price || 0, new_price || 0, discount_percentage || 0,
-            sold_out ? 1 : 0, size || null, position
+            sold_out ? 1 : 0, size || null, is_bestseller ? 1 : 0, position
         );
 
         const productId = info.lastInsertRowid;
@@ -398,14 +398,14 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
 
     const {
         name, category_id, image_url, image_url_2, video_url, old_price, new_price,
-        discount_percentage, sold_out, size, position, colors
+        discount_percentage, sold_out, size, is_bestseller, position, colors
     } = req.body;
 
     const updateProduct = db.transaction(() => {
         db.prepare(`
             UPDATE products SET
                 name = ?, category_id = ?, image_url = ?, image_url_2 = ?, video_url = ?, old_price = ?, new_price = ?,
-                discount_percentage = ?, sold_out = ?, size = ?, position = ?, updated_at = datetime('now')
+                discount_percentage = ?, sold_out = ?, size = ?, is_bestseller = ?, position = ?, updated_at = datetime('now')
             WHERE id = ?
         `).run(
             name ?? existing.name,
@@ -418,6 +418,7 @@ app.put('/api/admin/products/:id', requireAdmin, (req, res) => {
             discount_percentage !== undefined ? discount_percentage : existing.discount_percentage,
             sold_out !== undefined ? (sold_out ? 1 : 0) : existing.sold_out,
             size !== undefined ? size : existing.size,
+            is_bestseller !== undefined ? (is_bestseller ? 1 : 0) : existing.is_bestseller,
             position !== undefined ? position : existing.position,
             req.params.id
         );
@@ -457,12 +458,12 @@ app.post('/api/admin/products/:id/duplicate', requireAdmin, (req, res) => {
 
         const info = db.prepare(`
             INSERT INTO products
-                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, position, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                (name, category_id, image_url, image_url_2, video_url, old_price, new_price, discount_percentage, sold_out, size, is_bestseller, position, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         `).run(
             `${original.name} (cópia)`, original.category_id, original.image_url, original.image_url_2,
             original.video_url, original.old_price, original.new_price, original.discount_percentage,
-            original.sold_out, original.size, position
+            original.sold_out, original.size, original.is_bestseller, position
         );
 
         const newProductId = info.lastInsertRowid;

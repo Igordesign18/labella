@@ -1495,6 +1495,11 @@
                     <label for="soldOut">Produto Esgotado</label>
                 </div>
 
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isBestseller">
+                    <label for="isBestseller">Mais Vendido (aparece na vitrine "Mais Vendidos" do site)</label>
+                </div>
+
                 <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; margin-top: 20px;">
                     <i data-lucide="save" style="width: 18px; height: 18px;"></i>
                     Salvar Produto
@@ -3047,6 +3052,7 @@
             document.getElementById('submitBtn').textContent = 'Salvar Produto';
             document.getElementById('productForm').reset();
             document.getElementById('soldOut').checked = false;
+            document.getElementById('isBestseller').checked = false;
             document.getElementById('productImagePreview').style.display = 'none';
             document.getElementById('productImageUpload').style.display = 'block';
             document.getElementById('productImage2Preview').style.display = 'none';
@@ -3073,6 +3079,7 @@
                 document.getElementById('newPrice').value = data.new_price;
                 document.getElementById('discount').value = data.discount_percentage;
                 document.getElementById('soldOut').checked = data.sold_out || false;
+                document.getElementById('isBestseller').checked = data.is_bestseller || false;
                 document.getElementById('productSize').value = data.size || '';
 
                 if (data.image_url) {
@@ -3160,6 +3167,7 @@
                 new_price: parseFloat(document.getElementById('newPrice').value),
                 discount_percentage: parseInt(document.getElementById('discount').value),
                 sold_out: document.getElementById('soldOut').checked,
+                is_bestseller: document.getElementById('isBestseller').checked,
                 size: document.getElementById('productSize').value.trim() || null,
                 colors: productColorsTemp.map(color => ({ name: color.name, hex: color.hex }))
             };
