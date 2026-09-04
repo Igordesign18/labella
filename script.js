@@ -533,8 +533,8 @@ function buildProductCard(product) {
   const imageDotsHtml = hasSecondImage
     ? `
                 <div class="product-image-dots" onclick="event.stopPropagation()">
-                    <button type="button" class="product-image-dot active" onclick="switchProductImage(this, '${product.image_url}')" aria-label="Foto 1"></button>
-                    <button type="button" class="product-image-dot" onclick="switchProductImage(this, '${product.image_url_2}')" aria-label="Foto 2"></button>
+                    <button type="button" class="product-image-dot active" onclick="switchProductImage(this, 0)" aria-label="Foto 1"></button>
+                    <button type="button" class="product-image-dot" onclick="switchProductImage(this, 1)" aria-label="Foto 2"></button>
                 </div>
             `
     : ""
@@ -547,9 +547,16 @@ function buildProductCard(product) {
             `
     : ""
 
+  const imageMarkup = hasSecondImage
+    ? `
+                <img class="product-img-layer active" src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
+                <img class="product-img-layer" src="${product.image_url_2}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
+            `
+    : `<img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">`
+
   card.innerHTML = `
             <div class="product-image" onclick="openFullscreen(this)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
-                <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
+                ${imageMarkup}
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
                 ${product.video_url ? `<button type="button" class="video-badge" onclick="event.stopPropagation(); openProductVideo('${product.video_url}')" title="Assistir vídeo"><i data-lucide="play" style="width: 16px; height: 16px;"></i></button>` : ""}
@@ -598,29 +605,20 @@ function healBrokenProductImages(container) {
 // cadastrada), do mesmo jeito que o fundo do hero já fazia. Pausa quando o
 // mouse está em cima do card, pra não atrapalhar quem está olhando a foto.
 function startProductImageCycle(imageWrapper) {
-  let images = []
-  try {
-    images = JSON.parse(imageWrapper.dataset.images || "[]")
-  } catch (error) {
-    images = []
-  }
-  if (images.length < 2) return
+  const layers = imageWrapper.querySelectorAll(".product-img-layer")
+  if (layers.length < 2) return
 
   imageWrapper.dataset.currentIndex = "0"
 
   function tick() {
     const current = Number(imageWrapper.dataset.currentIndex || "0")
-    const next = (current + 1) % images.length
+    const next = (current + 1) % layers.length
     imageWrapper.dataset.currentIndex = String(next)
 
-    const img = imageWrapper.querySelector("img")
-    if (img) {
-      img.style.opacity = "0"
-      setTimeout(() => {
-        img.src = images[next]
-        img.style.opacity = "1"
-      }, 200)
-    }
+    // As duas fotos já estão carregadas desde o início (cada uma na sua
+    // camada), então só precisa trocar qual fica "por cima" — o CSS cuida
+    // do esmaecer suave entre elas, sem nenhum instante em branco no meio.
+    layers.forEach((layer, i) => layer.classList.toggle("active", i === next))
 
     imageWrapper.querySelectorAll(".product-image-dot").forEach((dot, i) => {
       dot.classList.toggle("active", i === next)
@@ -649,17 +647,17 @@ function stopProductImageCycle(imageWrapper) {
   }
 }
 
-function switchProductImage(dotEl, imageUrl) {
+function switchProductImage(dotEl, index) {
   const imageWrapper = dotEl.closest(".product-image")
   if (!imageWrapper) return
 
-  const img = imageWrapper.querySelector("img")
-  if (img) img.src = imageUrl
+  const layers = imageWrapper.querySelectorAll(".product-img-layer")
+  layers.forEach((layer, i) => layer.classList.toggle("active", i === index))
 
   const dots = Array.from(imageWrapper.querySelectorAll(".product-image-dot"))
   dots.forEach((dot) => dot.classList.remove("active"))
   dotEl.classList.add("active")
-  imageWrapper.dataset.currentIndex = String(dots.indexOf(dotEl))
+  imageWrapper.dataset.currentIndex = String(index)
 }
 
 function selectColor(element, productId, colorName, colorHex) {
@@ -886,8 +884,12 @@ function openFullscreen(source) {
 
   // Abre já na foto que estava sendo exibida no card (pode não ser a primeira,
   // se a troca automática já tiver avançado pra segunda foto).
-  const currentImg = source && source.querySelector ? source.querySelector("img") : null
-  fullscreenIndex = currentImg ? Math.max(0, images.indexOf(currentImg.src)) : 0
+  if (source && source.dataset && source.dataset.currentIndex !== undefined) {
+    fullscreenIndex = Number(source.dataset.currentIndex) || 0
+  } else {
+    const activeLayer = source && source.querySelector ? source.querySelector(".product-img-layer.active, img") : null
+    fullscreenIndex = activeLayer ? Math.max(0, images.indexOf(activeLayer.src)) : 0
+  }
 
   const video = document.getElementById("fullscreenVideo")
   video.pause()
