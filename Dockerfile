@@ -17,6 +17,12 @@ COPY . .
 ENV DATA_DIR=/app/data
 RUN mkdir -p /app/data
 
-EXPOSE 3000
+# Porta fixada em 80 para bater exatamente com o que está configurado na aba
+# "Domínios" do EasyPanel — antes o app rodava na 80 (por causa de uma
+# variável de ambiente) mas o Dockerfile declarava 3000, essa inconsistência
+# provavelmente fazia o EasyPanel checar a porta errada e reiniciar o
+# container sozinho de tempos em tempos.
+ENV PORT=80
+EXPOSE 80
 
 CMD ["node", "server.js"]
