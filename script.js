@@ -457,7 +457,7 @@ function displayProducts(products, container) {
 
     card.innerHTML = `
             <div class="product-image" onclick="openFullscreen(this)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
-                <img src="${product.image_url}" alt="${product.name}" decoding="async" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
+                <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
                 ${product.sold_out ? '<div class="sold-out-badge">ESGOTADO</div>' : ""}
                 ${product.video_url ? `<button type="button" class="video-badge" onclick="event.stopPropagation(); openProductVideo('${product.video_url}')" title="Assistir vídeo"><i data-lucide="play" style="width: 16px; height: 16px;"></i></button>` : ""}
@@ -499,6 +499,24 @@ function displayProducts(products, container) {
   setTimeout(() => {
     initProductScrollReveal()()
   }, 100)
+
+  healBrokenProductImages(container)
+}
+
+// Em alguns celulares (principalmente Android), uma foto inserida dinamicamente
+// pode ficar "presa" sem nunca aparecer, mesmo com o link certo — o navegador
+// marca a imagem como "carregada" mas sem nenhum pixel de verdade nela. Essa
+// checagem detecta esse caso especificamente e força a foto a carregar de novo.
+function healBrokenProductImages(container) {
+  setTimeout(() => {
+    const images = container.querySelectorAll(".product-image img")
+    images.forEach((img) => {
+      if (img.complete && img.naturalWidth === 0 && img.src && !img.src.includes("via.placeholder.com")) {
+        const freshUrl = img.src.split("?")[0] + "?r=" + Date.now()
+        img.src = freshUrl
+      }
+    })
+  }, 800)
 }
 
 // Troca automaticamente entre as fotos do produto (quando há uma segunda foto
