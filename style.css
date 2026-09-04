@@ -705,6 +705,71 @@ body.loaded .hero-text .cta-button {
   margin: 0 auto;
 }
 
+/* Carrossel por categoria */
+.category-section {
+  max-width: 1400px;
+  margin: 0 auto 64px;
+}
+
+.category-section-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+
+.category-carousel-wrapper {
+  position: relative;
+}
+
+.category-carousel {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+.category-carousel .product-card {
+  flex: 0 0 auto;
+  width: 300px;
+  scroll-snap-align: start;
+}
+
+.category-carousel-arrow {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(36, 31, 28, 0.12);
+  z-index: 5;
+  color: var(--ink);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.category-carousel-arrow:hover {
+  background: var(--cream-deep);
+  border-color: var(--color-secondary);
+}
+
+.category-carousel-arrow.prev { left: -18px; }
+.category-carousel-arrow.next { right: -18px; }
+
+@media (max-width: 900px) {
+  .category-carousel-arrow { display: none; }
+}
+
 .product-card {
   background: var(--white);
   border: 1px solid var(--line);
@@ -726,6 +791,10 @@ body.loaded .hero-text .cta-button {
   overflow: hidden;
   cursor: pointer;
   background: var(--cream-deep);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .product-image img {
@@ -733,10 +802,13 @@ body.loaded .hero-text .cta-button {
   height: 100%;
   object-fit: cover;
   transition: transform 0.6s ease, opacity 0.4s ease;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .product-card:hover .product-image img {
-  transform: scale(1.045);
+  transform: translateZ(0) scale(1.045);
+  -webkit-transform: translateZ(0) scale(1.045);
 }
 
 .discount-badge {

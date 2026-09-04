@@ -3,7 +3,6 @@ let siteConfig = {}
 const productColors = {}
 let categories = []
 let allProducts = []
-let currentCategory = "all"
 let lastProductsSnapshot = null
 let productImageIntervals = []
 
@@ -82,71 +81,49 @@ function initProductScrollReveal() {
 
 async function loadCategories() {
   try {
-    const response = await fetch("/api/categories")
+    const response = await fetchWithTimeout("/api/categories")
     if (!response.ok) throw new Error("Erro ao carregar categorias")
     const data = await response.json()
 
     if (data && data.length > 0) {
       categories = data
 
-      // Carregar no menu superior
+      // Carregar no menu superior — clicar leva direto até o carrossel
+      // daquela categoria lá embaixo.
       const navContainer = document.getElementById("navCategories")
       navContainer.innerHTML = ""
 
       data.forEach((category) => {
         const li = document.createElement("li")
         const link = document.createElement("a")
-        link.href = "#novidades"
+        link.href = `#category-${category.id}`
         link.textContent = category.name
         link.addEventListener("click", (e) => {
           e.preventDefault()
-          selectCategory(String(category.id))
+          scrollToCategorySection(category.id)
         })
         li.appendChild(link)
         navContainer.appendChild(li)
       })
 
-      // Carregar nos botões de filtro
-      const filterContainer = document.getElementById("categoryFilters")
-      filterContainer.innerHTML =
-        '<button class="category-btn" data-category="promocoes">Promoções</button><button class="category-btn active" data-category="all">Todos</button>'
-
-      data.forEach((category) => {
-        const button = document.createElement("button")
-        button.className = "category-btn"
-        // Use category.id instead of category.slug for filtering
-        button.setAttribute("data-category", category.id)
-        button.textContent = category.name
-        filterContainer.appendChild(button)
-      })
-
-      // Adicionar event listeners aos novos botões
-      document.querySelectorAll(".category-btn").forEach((btn) => {
-        btn.addEventListener("click", function () {
-          selectCategory(this.getAttribute("data-category"))
-        })
-      })
+      // Produtos e categorias agora carregam em paralelo, sem um esperar o
+      // outro. Se os produtos já tiverem aparecido antes das categorias
+      // chegarem (ficando temporariamente todos em "Outras peças"),
+      // reagrupa direitinho assim que as categorias ficam disponíveis.
+      if (allProducts.length > 0) {
+        const container = document.getElementById("productsContainer")
+        if (container) renderProductCarousels(allProducts, container)
+      }
     }
   } catch (error) {
     console.error("Erro ao carregar categorias:", error)
   }
 }
 
-// Filtra por categoria, sincroniza o botão ativo e rola até os resultados.
-// Antes, clicar numa categoria (pelo menu de cima ou pelos botões) não levava
-// o usuário até os produtos filtrados — o menu de cima nem funcionava (o link
-// apontava para uma âncora que não existia) e os botões filtravam sem rolar,
-// então quem clicava ficava "perdido" na página.
-function selectCategory(category) {
-  document.querySelectorAll(".category-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.getAttribute("data-category") === category)
-  })
-  filterProductsByCategory(category)
-  scrollToProductsSection()
-}
-
-function scrollToProductsSection() {
-  const section = document.getElementById("novidades")
+// Rola suavemente até o carrossel da categoria escolhida no menu, descontando
+// a altura do menu fixo no topo (pra não ficar escondido atrás dele).
+function scrollToCategorySection(categoryId) {
+  const section = document.getElementById(`category-${categoryId}`)
   if (!section) return
 
   const nav = document.getElementById("siteNav")
@@ -294,17 +271,25 @@ async function loadProductColors() {
           hex: row.color_hex,
         })
       })
+
+      // Mesma lógica do reagrupamento de categorias: se os produtos já
+      // apareceram antes das cores chegarem, atualiza os cards agora que
+      // as cores estão disponíveis.
+      if (allProducts.length > 0) {
+        const container = document.getElementById("productsContainer")
+        if (container) renderProductCarousels(allProducts, container)
+      }
     }
   } catch (error) {
     console.error("Erro ao carregar cores:", error)
   }
 }
 
-async function loadProducts() {
+async function loadProducts(isRetry) {
   const container = document.getElementById("productsContainer")
 
   try {
-    const response = await fetch("/api/products")
+    const response = await fetchWithTimeout("/api/products")
     if (!response.ok) throw new Error("Erro ao carregar produtos")
     const products = await response.json()
 
@@ -328,36 +313,24 @@ async function loadProducts() {
     lastProductsSnapshot = snapshot
 
     allProducts = products
-    filterProductsByCategory(currentCategory)
+    renderProductCarousels(products, container)
   } catch (error) {
     console.error("Erro ao carregar produtos:", error)
+
+    if (!isRetry) {
+      // Primeira falha (ex: servidor reiniciando bem nessa hora) — tenta de
+      // novo rapidamente, em vez de deixar a pessoa esperando os 30s do
+      // próximo ciclo normal de atualização.
+      setTimeout(() => loadProducts(true), 2500)
+      return
+    }
+
     container.innerHTML = `
             <div class="loading-state">
-                <p>Erro ao carregar produtos. Por favor, tente novamente mais tarde.</p>
+                <p>Não foi possível carregar os produtos agora. Atualize a página em alguns instantes.</p>
             </div>
         `
   }
-}
-
-function filterProductsByCategory(category) {
-  currentCategory = category
-  const container = document.getElementById("productsContainer")
-  let filteredProducts = allProducts
-
-  if (category === "promocoes") {
-    // Mostrar apenas produtos com desconto
-    filteredProducts = allProducts.filter(
-      (product) => product.discount_percentage && Number.parseFloat(product.discount_percentage) > 0,
-    )
-  } else if (category !== "all") {
-    // Filtrar por categoria específica usando category_id
-    const categoryId = Number.parseInt(category)
-    filteredProducts = allProducts.filter(
-      (product) => product.category_id && Number.parseInt(product.category_id) === categoryId,
-    )
-  }
-
-  displayProducts(filteredProducts, container)
 }
 
 function toggleMobileMenu() {
@@ -389,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })
 
-function displayProducts(products, container) {
+function renderProductCarousels(products, container) {
   // Zera os intervalos de troca automática de imagem da renderização anterior,
   // senão eles continuam rodando em segundo plano mesmo depois que os cards
   // antigos são substituídos (vazamento de memória + processamento à toa).
@@ -399,63 +372,151 @@ function displayProducts(products, container) {
   if (!products || products.length === 0) {
     container.innerHTML = `
             <div class="loading-state">
-                <p>Nenhum produto disponível nesta categoria.</p>
+                <p>Nenhum produto disponível no momento.</p>
             </div>
         `
     return
   }
 
-  const grid = document.createElement("div")
-  grid.className = "products-grid"
+  container.innerHTML = ""
+
+  // Um carrossel por categoria, na mesma ordem das categorias cadastradas no
+  // painel. Produtos sem categoria (ou de uma categoria já excluída) entram
+  // num carrossel "Outras peças" no final, se houver algum.
+  const productsByCategory = new Map()
+  const uncategorized = []
 
   products.forEach((product) => {
-    const card = document.createElement("div")
-    card.className = "product-card scroll-reveal"
-    if (product.sold_out) {
-      card.classList.add("sold-out")
+    if (product.category_id && categories.some((c) => c.id === product.category_id)) {
+      if (!productsByCategory.has(product.category_id)) {
+        productsByCategory.set(product.category_id, [])
+      }
+      productsByCategory.get(product.category_id).push(product)
+    } else {
+      uncategorized.push(product)
     }
+  })
 
-    const productUrl = `${window.location.origin}${window.location.pathname}?produto=${product.id}`
-    const whatsappMessage = encodeURIComponent(`Olá! Tenho interesse no ${product.name}\n\nVer produto: ${productUrl}`)
+  categories.forEach((category) => {
+    const categoryProducts = productsByCategory.get(category.id)
+    if (categoryProducts && categoryProducts.length > 0) {
+      container.appendChild(buildCategorySection(category.id, category.name, categoryProducts))
+    }
+  })
 
-    let colorsHtml = ""
-    if (productColors[product.id] && productColors[product.id].length > 0) {
-      colorsHtml = `
+  if (uncategorized.length > 0) {
+    container.appendChild(buildCategorySection("outras", "Outras peças", uncategorized))
+  }
+
+  container.querySelectorAll(".product-image[data-images]").forEach((imageWrapper) => {
+    startProductImageCycle(imageWrapper)
+  })
+
+  lucide.createIcons()
+
+  // Initialize scroll reveal for new products
+  setTimeout(() => {
+    initProductScrollReveal()()
+  }, 100)
+
+  healBrokenProductImages(container)
+}
+
+// Monta a seção de uma categoria: título + carrossel horizontal com setas
+// (as setas somem sozinhas em telas pequenas, onde já dá pra arrastar com o dedo).
+function buildCategorySection(categoryId, categoryName, categoryProducts) {
+  const section = document.createElement("div")
+  section.className = "category-section"
+  section.id = `category-${categoryId}`
+
+  const title = document.createElement("h3")
+  title.className = "category-section-title"
+  title.textContent = categoryName
+  section.appendChild(title)
+
+  const wrapper = document.createElement("div")
+  wrapper.className = "category-carousel-wrapper"
+
+  const carousel = document.createElement("div")
+  carousel.className = "category-carousel"
+
+  categoryProducts.forEach((product) => {
+    carousel.appendChild(buildProductCard(product))
+  })
+
+  const prevBtn = document.createElement("button")
+  prevBtn.type = "button"
+  prevBtn.className = "category-carousel-arrow prev"
+  prevBtn.setAttribute("aria-label", "Ver peças anteriores")
+  prevBtn.innerHTML = '<i data-lucide="chevron-left"></i>'
+  prevBtn.onclick = () => scrollCategoryCarousel(carousel, -1)
+
+  const nextBtn = document.createElement("button")
+  nextBtn.type = "button"
+  nextBtn.className = "category-carousel-arrow next"
+  nextBtn.setAttribute("aria-label", "Ver mais peças")
+  nextBtn.innerHTML = '<i data-lucide="chevron-right"></i>'
+  nextBtn.onclick = () => scrollCategoryCarousel(carousel, 1)
+
+  wrapper.appendChild(prevBtn)
+  wrapper.appendChild(carousel)
+  wrapper.appendChild(nextBtn)
+  section.appendChild(wrapper)
+
+  return section
+}
+
+function scrollCategoryCarousel(carousel, direction) {
+  const cardWidth = carousel.querySelector(".product-card")?.offsetWidth || 300
+  carousel.scrollBy({ left: direction * (cardWidth + 24) * 2, behavior: "smooth" })
+}
+
+// Constrói o card de um produto (usado dentro de cada carrossel de categoria).
+function buildProductCard(product) {
+  const card = document.createElement("div")
+  card.className = "product-card scroll-reveal"
+  if (product.sold_out) {
+    card.classList.add("sold-out")
+  }
+
+  let colorsHtml = ""
+  if (productColors[product.id] && productColors[product.id].length > 0) {
+    colorsHtml = `
                 <div class="product-colors">
                     <span class="product-colors-label">Cor disponível:</span>
                     <div class="color-dots-container">
             `
-      productColors[product.id].forEach((color) => {
-        colorsHtml += `
+    productColors[product.id].forEach((color) => {
+      colorsHtml += `
                     <div class="color-dot" 
                          style="background-color: ${color.hex};" 
                          onclick="selectColor(this, '${product.id}', '${color.name}', '${color.hex}')"
                          title="${color.name}">
                     </div>
                 `
-      })
-      colorsHtml += "</div></div>"
-    }
+    })
+    colorsHtml += "</div></div>"
+  }
 
-    const hasSecondImage = !!product.image_url_2
-    const imageDotsHtml = hasSecondImage
-      ? `
+  const hasSecondImage = !!product.image_url_2
+  const imageDotsHtml = hasSecondImage
+    ? `
                 <div class="product-image-dots" onclick="event.stopPropagation()">
                     <button type="button" class="product-image-dot active" onclick="switchProductImage(this, '${product.image_url}')" aria-label="Foto 1"></button>
                     <button type="button" class="product-image-dot" onclick="switchProductImage(this, '${product.image_url_2}')" aria-label="Foto 2"></button>
                 </div>
             `
-      : ""
+    : ""
 
-    const sizeHtml = product.size
-      ? `
+  const sizeHtml = product.size
+    ? `
                 <div class="product-size">
                     <span class="product-size-label">Tamanho:</span> ${product.size}
                 </div>
             `
-      : ""
+    : ""
 
-    card.innerHTML = `
+  card.innerHTML = `
             <div class="product-image" onclick="openFullscreen(this)" ${hasSecondImage ? `data-images='${JSON.stringify([product.image_url, product.image_url_2]).replace(/'/g, "&apos;")}'` : ""}>
                 <img src="${product.image_url}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/400x400?text=Sem+Imagem'">
                 ${product.discount_percentage ? `<span class="discount-badge">-${product.discount_percentage}%</span>` : ""}
@@ -483,24 +544,7 @@ function displayProducts(products, container) {
             </div>
         `
 
-    grid.appendChild(card)
-  })
-
-  container.innerHTML = ""
-  container.appendChild(grid)
-
-  container.querySelectorAll(".product-image[data-images]").forEach((imageWrapper) => {
-    startProductImageCycle(imageWrapper)
-  })
-
-  lucide.createIcons()
-  
-  // Initialize scroll reveal for new products
-  setTimeout(() => {
-    initProductScrollReveal()()
-  }, 100)
-
-  healBrokenProductImages(container)
+  return card
 }
 
 // Em alguns celulares (principalmente Android), uma foto inserida dinamicamente
@@ -1262,6 +1306,27 @@ function initAmbientBackground() {
   requestAnimationFrame(animateAmbient)
 }
 
+// Garante que uma chamada travada (ex: servidor reiniciando bem na hora)
+// nunca impeça o restante do site de continuar — depois desse tempo, segue
+// em frente mesmo que a chamada ainda não tenha respondido.
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, ms))])
+}
+
+// fetch() sozinho pode ficar pendurado pra sempre esperando resposta (ex: o
+// servidor reiniciando bem naquela hora) sem nunca dar erro nem completar.
+// Essa versão desiste depois de alguns segundos, pra sempre sobrar uma chance
+// de mostrar algo (ou tentar de novo) em vez de travar a página para sempre.
+async function fetchWithTimeout(url, ms = 8000) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), ms)
+  try {
+    return await fetch(url, { signal: controller.signal })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize scroll reveal first
   initScrollReveal()
@@ -1275,15 +1340,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     carouselViewport.addEventListener("mouseleave", restartCarouselAutoplay)
   }
 
-  // Essas chamadas são independentes entre si, mas antes rodavam uma atrás da
-  // outra (esperando cada uma terminar pra só então começar a próxima), o que
-  // multiplicava à toa o tempo até os produtos aparecerem. Agora rodam em
-  // paralelo — só os produtos esperam as cores carregarem, porque precisam
-  // delas para mostrar as bolinhas de cor certas.
+  // Produtos agora carregam de forma totalmente independente, do mesmo jeito
+  // que os banners sempre carregaram — sem esperar categorias ou cores. Se
+  // categorias/cores demorarem ou falharem, os produtos aparecem do mesmo
+  // jeito (só sem agrupamento por categoria, ou sem a bolinha de cor, até
+  // essas informações chegarem).
   loadSiteColorsAndConfig()
   loadBanners()
-  await Promise.all([loadCategories(), loadProductColors()])
-  await loadProducts()
+  loadCategories()
+  loadProductColors()
+  loadProducts()
   lucide.createIcons()
 
   const urlParams = new URLSearchParams(window.location.search)
